@@ -13,9 +13,11 @@ public class Main {
     public static void main(String[] args) throws Exception {
         FileInputStream file = new FileInputStream(fileName);
         Workbook workbook = new XSSFWorkbook(file);
+        System.out.println("hello" + workbook.getNumberOfSheets());
         DataFormatter dataFormatter = new DataFormatter();
-        for (int i = 5; i < workbook.getNumberOfSheets(); i++) {
+        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
             Sheet shets = workbook.getSheetAt(i);
+            System.out.println("Sheet name : " + workbook.getSheetName(i));
             Iterator<Row> sheets = shets.iterator();
             while(sheets.hasNext()) {
                 Row row = sheets.next();
