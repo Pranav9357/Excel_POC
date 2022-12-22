@@ -18,76 +18,59 @@ public class Main {
         DataFormatter dataFormatter = new DataFormatter();
         ArrayList<Integer> sheetPositions = getSheetPositions(workbook);
         System.out.println(sheetPositions.size());
-        ArrayList<HashMap<String, HashMap<String, Integer>>> sheetData = new ArrayList<>();
-        for (int i = 0; i < 1; i++) {
+        ArrayList<HashMap<String, HashMap<String, HashMap<String, Integer>>>> sheetData = new ArrayList<>();
+        for (int i = 0; i < sheetPositions.size(); i++) {
             Integer sheetPosition = sheetPositions.get(i);
-            System.out.println("Sheet Position: " + sheetPosition);
             Sheet sheet = workbook.getSheetAt(sheetPosition);
-            System.out.println("Sheet Name: " + workbook.getSheetName(sheetPosition));
             Iterator<Row> rowIterator = sheet.rowIterator();
             HashMap<String, HashMap<String, Integer>> sheetDataMap = new HashMap<>();
             ArrayList<String> headers = new ArrayList<>();
+            ArrayList<String> values = new ArrayList<>();
+            label:
             while (rowIterator.hasNext()) {
                 // check if it is 1st row, if yes then ignore first column of the row and set the column name as key and column number as value and add it to the map
                 Row row = rowIterator.next();
                 if (row.getRowNum() == 0) {
                     Iterator<Cell> cellIterator = row.cellIterator();
-                    while (cellIterator.hasNext()) {
-                        Cell cell = cellIterator.next();
-                        // ignore the column 0
-                        if (cell.getColumnIndex() == 0) {
-                            continue;
-                        }
-
-                        String cellValue = dataFormatter.formatCellValue(cell);
-
-                        // ignore the column if it is empty
-                        if (cellValue.isEmpty()) {
-                            continue;
-                        } else {
-                            headers.add(cellValue);
-                        }
-                    }
-                    // else if check if the row is not empty,
-                    // if yes then break the loop
+                    getRowValues(dataFormatter, headers, cellIterator);
                 } else {
                     if (isRowEmpty(row)) {
-                        break;
+                        break label;
                     }
-                    // get the value of the first column and check if it is not empty, if yes then create a set of map and add it to the list
-                    Cell firstCell = row.getCell(0);
+                    Cell firstCell = row.getCell    (0);
                     String firstCellValue = dataFormatter.formatCellValue(firstCell);
                     if (!firstCellValue.isEmpty()) {
-                        // the value of the first column is not empty, so create a map and add it to the list
+                        Iterator<Cell> cellIterator = row.cellIterator();
                         HashMap<String, Integer> rowMap = new HashMap<>();
-                        for (int j = 0; j < headers.size(); j++) {
-                            Cell cell = row.getCell(j + 1);
-                            String cellValue = dataFormatter.formatCellValue(cell);
-                            if (cellValue.isEmpty()) {
-                                rowMap.put(headers.get(j), 0);
-                            } else {
-                                rowMap.put(headers.get(j), Integer.parseInt(cellValue));
-                            }
-                        }
-                        sheetDataMap.put(firstCellValue, rowMap);
+                        getRowValues(dataFormatter, values, cellIterator);
                     }
+                    HashMap<String, Integer> innerMap = new HashMap<>();
+                    for (int j = 0; j < headers.size(); j++) {
+                        innerMap.put(headers.get(j), Integer.parseInt(values.get(j)));
+                    }
+                    sheetDataMap.put(firstCellValue, innerMap);
                 }
             }
-            System.out.println(headers);
-            sheetData.add(sheetDataMap);
+            HashMap<String, HashMap<String, HashMap<String, Integer>>> sheetMap = new HashMap<>();
+            sheetMap.put(workbook.getSheetName(sheetPosition), sheetDataMap);
+            sheetData.add(sheetMap);
         }
         sheetData.forEach(System.out::println);
-        // for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-        //     Sheet sheetAt = workbook.getSheetAt(i);
-        //     for (Row row : sheetAt) {
-        //         Iterator<Cell> cellIterator = row.cellIterator();
-        //         while (cellIterator.hasNext()) {
-        //             Cell cell = cellIterator.next();
-        //             String cellValue = dataFormatter.formatCellValue(cell);
-        //         }
-        //     }
-        // }
         workbook.close();
+    }
+
+    private static void getRowValues(DataFormatter dataFormatter, ArrayList<String> values, Iterator<Cell> cellIterator) {
+        while (cellIterator.hasNext()){
+            Cell cell = cellIterator.next();
+            if (cell.getColumnIndex() != 0) {
+                String cellValue = dataFormatter.formatCellValue(cell);
+                if (!cellValue.isEmpty()) {
+                    values.add(cellValue);
+                } else {
+                    continue;
+                }
+            }
+        }
     }
 
     private static boolean isRowEmpty(Row row) {
