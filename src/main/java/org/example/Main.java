@@ -21,9 +21,10 @@ public class Main {
 
 
 
-        File file = new File("dataOutput.csv");
+        File file = new File("output.csv");
         FileWriter fw = new FileWriter(file);
         BufferedWriter bw = new BufferedWriter(fw);
+        bw.write("Pointer,Color,Clarity,Values");
 
         Workbook workbook = readExcelFileFromResourceFolder();
         DataFormatter dataFormatter = new DataFormatter();
@@ -66,34 +67,39 @@ public class Main {
             sheetMap.put(workbook.getSheetName(sheetPosition), sheetDataMap);
             sheetData.add(sheetMap);
 
-            //output in String array
+            //ExcelData in ArrayList
 
             ArrayList<ArrayList<String>>  al = new ArrayList<>();
 
             Set<String> sheetname = sheetData.get(i).keySet();
+
             String[] Sheetname =sheetname.toArray(new String[sheetname.size()]);
-            Set<String> color = sheetData.get(i).get(Sheetname[i]).keySet();
+
+            Set<String> color = sheetData.get(i).get(Sheetname[0]).keySet();
+
             String[] Color =color.toArray(new String[color.size()]);
-            Set<String> C = sheetData.get(i).get(Sheetname[i]).get(Color[i]).keySet();
+
+            Set<String> C = sheetData.get(i).get(Sheetname[0]).get(Color[0]).keySet();
+
             String[] Clarity =C.toArray(new String[color.size()]);
-            for (int l=0;l<1;l++){
-                for (int j=0;j<sheetData.get(i).get(Sheetname[i]).size();j++){
+
+
+                for (int j=0;j<sheetData.get(i).get(Sheetname[0]).size();j++){
                     for (int k=0;k<color.size();k++){
                         ArrayList<String> list = new ArrayList<>();
-                        list.add(Sheetname[l]);
+                        list.add(Sheetname[0]);
                         list.add((Color[j]));
                         list.add(Clarity[k]);
-                        list.add((sheetData.get(i).get(Sheetname[i]).get(Color[i]).get(Clarity[k])).toString());
+                        list.add((sheetData.get(i).get(Sheetname[0]).get(Color[j]).get(Clarity[k])).toString());
 
                         al.add(list);
 
                     }
                 }
 
-                System.out.println(al);
-            }
-            bw.write("Pointer,Color,Clarity,Values");
             bw.newLine();
+
+                //writing data in csv file
 
             for (int n=0; n< al.size();n++){
                 bw.newLine();
@@ -102,11 +108,11 @@ public class Main {
                     bw.write(al.get(n).get(m)+",");
                 }
             }
-            bw.close();
-            fw.close();
-            System.out.println("data entered");
-        }
 
+        }
+        bw.close();
+        fw.close();
+        System.out.println("data entered");
 
 //        sheetData.forEach(System.out::println);
 
