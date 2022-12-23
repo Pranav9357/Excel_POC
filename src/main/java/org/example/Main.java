@@ -4,8 +4,10 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.util.*;
 
 public class Main {
@@ -13,12 +15,15 @@ public class Main {
     private static final String DECIMAL_TO_DECIMAL = "([0-9]+\\.[0-9]+) To ([0-9]+\\.[0-9]+)";
     private static final String STRING_DASH_DECIMAL_DASH_DECIMAL = "^[A-Z]+-[0-9]\\.[0-9]+-[0-9]\\.[0-9]+$";
 
+    private static final String CSV_FILE_PATH = "./SG_Final_22.189.result.csv";
+
     public static void main(String[] args) throws Exception {
         Workbook workbook = readExcelFileFromResourceFolder();
         DataFormatter dataFormatter = new DataFormatter();
         ArrayList<Integer> sheetPositions = getSheetPositions(workbook);
         System.out.println(sheetPositions.size());
         ArrayList<HashMap<String, HashMap<String, HashMap<String, Integer>>>> sheetData = new ArrayList<>();
+
         for (int i = 0; i < sheetPositions.size(); i++) {
             Integer sheetPosition = sheetPositions.get(i);
             Sheet sheet = workbook.getSheetAt(sheetPosition);
@@ -37,7 +42,7 @@ public class Main {
                     if (isRowEmpty(row)) {
                         break label;
                     }
-                    Cell firstCell = row.getCell    (0);
+                    Cell firstCell = row.getCell(0);
                     String firstCellValue = dataFormatter.formatCellValue(firstCell);
                     if (!firstCellValue.isEmpty()) {
                         Iterator<Cell> cellIterator = row.cellIterator();
@@ -54,13 +59,51 @@ public class Main {
             HashMap<String, HashMap<String, HashMap<String, Integer>>> sheetMap = new HashMap<>();
             sheetMap.put(workbook.getSheetName(sheetPosition), sheetDataMap);
             sheetData.add(sheetMap);
+
         }
-        sheetData.forEach(System.out::println);
+//        sheetData.forEach(System.out::println);
+        File file = new File(CSV_FILE_PATH);
+        FileWriter fw = new FileWriter(file);
+        BufferedWriter bw = new BufferedWriter(fw);
+        List<List<String>> list = new ArrayList<>();
+        bw.write("  Sheet. NO.  ---  color  ---  Clarity  ---  value     ");
+        for (int l = 0; l < sheetPositions.size(); l++) {
+            Set<String> sheetname = sheetData.get(l).keySet() ;
+            System.out.println(sheetname);
+            String[] Sheetname = sheetname.toArray(new String[sheetname.size()]);
+            Set<String> color = sheetData.get(l).get(Sheetname[0]).keySet();
+            System.out.println(color);
+            String[] Color = color.toArray(new String[color.size()]);
+            Set<String> C = sheetData.get(l).get(Sheetname[0]).get(Color[0]).keySet();
+            System.out.println(C);
+            String[] Clarity = C.toArray(new String[color.size()]);
+
+            for (int j = 0; j < sheetData.get(l).get(Sheetname[0]).size(); j++) {
+                for (int k = 0; k < color.size(); k++) {
+                    List<String> list1 = new ArrayList<>();
+                    list1.add(Sheetname[0]);
+                    list1.add((Color[j]));
+                    list1.add(Clarity[k]);
+                    list1.add((sheetData.get(l).get(Sheetname[0]).get(Color[j]).get(Clarity[k])).toString());
+                    list.add(list1);
+                }
+            }
+
+            bw.newLine();
+            for (int p = 0; p < list.size(); p++) {
+                bw.newLine();
+                for (int j = 0; j < list.get(p).size(); j++)
+                    bw.write(list.get(p).get(j) + "  ---  ");
+            }
+        }
+        bw.close();
+        fw.close();
+//        list.forEach((Consumer<? super List<String>>) System.out::println);
         workbook.close();
     }
 
     private static void getRowValues(DataFormatter dataFormatter, ArrayList<String> values, Iterator<Cell> cellIterator) {
-        while (cellIterator.hasNext()){
+        while (cellIterator.hasNext()) {
             Cell cell = cellIterator.next();
             if (cell.getColumnIndex() != 0) {
                 String cellValue = dataFormatter.formatCellValue(cell);
@@ -146,4 +189,6 @@ public class Main {
         System.out.println("rows: " + rows + " cols: " + cols);
 
     }
+
+
 }
