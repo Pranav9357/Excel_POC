@@ -1,11 +1,15 @@
 package org.example;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.util.*;
 
 public class Main {
@@ -14,6 +18,13 @@ public class Main {
     private static final String STRING_DASH_DECIMAL_DASH_DECIMAL = "^[A-Z]+-[0-9]\\.[0-9]+-[0-9]\\.[0-9]+$";
 
     public static void main(String[] args) throws Exception {
+
+
+
+        File file = new File("dataOutput.csv");
+        FileWriter fw = new FileWriter(file);
+        BufferedWriter bw = new BufferedWriter(fw);
+
         Workbook workbook = readExcelFileFromResourceFolder();
         DataFormatter dataFormatter = new DataFormatter();
         ArrayList<Integer> sheetPositions = getSheetPositions(workbook);
@@ -54,10 +65,52 @@ public class Main {
             HashMap<String, HashMap<String, HashMap<String, Integer>>> sheetMap = new HashMap<>();
             sheetMap.put(workbook.getSheetName(sheetPosition), sheetDataMap);
             sheetData.add(sheetMap);
+
+            //output in String array
+
+            ArrayList<ArrayList<String>>  al = new ArrayList<>();
+
+            Set<String> sheetname = sheetData.get(i).keySet();
+            String[] Sheetname =sheetname.toArray(new String[sheetname.size()]);
+            Set<String> color = sheetData.get(i).get(Sheetname[i]).keySet();
+            String[] Color =color.toArray(new String[color.size()]);
+            Set<String> C = sheetData.get(i).get(Sheetname[i]).get(Color[i]).keySet();
+            String[] Clarity =C.toArray(new String[color.size()]);
+            for (int l=0;l<1;l++){
+                for (int j=0;j<sheetData.get(i).get(Sheetname[i]).size();j++){
+                    for (int k=0;k<color.size();k++){
+                        ArrayList<String> list = new ArrayList<>();
+                        list.add(Sheetname[l]);
+                        list.add((Color[j]));
+                        list.add(Clarity[k]);
+                        list.add((sheetData.get(i).get(Sheetname[i]).get(Color[i]).get(Clarity[k])).toString());
+
+                        al.add(list);
+
+                    }
+                }
+
+                System.out.println(al);
+            }
+            bw.write("Pointer,Color,Clarity,Values");
+            bw.newLine();
+
+            for (int n=0; n< al.size();n++){
+                bw.newLine();
+                for (int m=0;m< al.get(n).size();m++){
+
+                    bw.write(al.get(n).get(m)+",");
+                }
+            }
+            bw.close();
+            fw.close();
+            System.out.println("data entered");
         }
-        sheetData.forEach(System.out::println);
-        workbook.close();
-    }
+
+
+//        sheetData.forEach(System.out::println);
+
+        }
 
     private static void getRowValues(DataFormatter dataFormatter, ArrayList<String> values, Iterator<Cell> cellIterator) {
         while (cellIterator.hasNext()){
