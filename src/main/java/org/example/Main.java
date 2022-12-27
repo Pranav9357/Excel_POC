@@ -168,6 +168,31 @@ public class Main {
         }
     }
 
+    private static String getClarityIndex (Cell cell, int clarity_header_row_index, Sheet sheet) {
+        Row sheet_clarity_header_row = sheet.getRow(clarity_header_row_index);
+        int cell_column_index = cell.getColumnIndex() - 1;
+        if (sheet_clarity_header_row.getCell(cell_column_index).getStringCellValue() != null) {
+            return sheet_clarity_header_row.getCell(cell_column_index).getStringCellValue();
+        } else {
+            while (sheet_clarity_header_row.getCell(cell_column_index).getStringCellValue() == null) {
+                cell_column_index -= 1;
+            }
+            return sheet_clarity_header_row.getCell(cell_column_index).getStringCellValue();
+        }
+    }
+
+    private static String getCutIndex(Cell cell, int cut_header_row_index, Sheet sheet) {
+        Row sheet_cut_header_row = sheet.getRow(cut_header_row_index);
+        int cell_column_index = cell.getColumnIndex() - 1;
+        return sheet_cut_header_row.getCell(cell_column_index).getStringCellValue();
+    }
+
+    private static String getFlorescenceIndex(Cell cell, List<Integer> florescence_header_index, Sheet sheet) {
+        int cell_row_index = cell.getRowIndex();
+        String sheet_florescence_value = sheet.getRow(cell_row_index).getCell(florescence_header_index.get(1)).getStringCellValue();
+        return sheet_florescence_value;
+    }
+
 
     private static void getRowValues(DataFormatter dataFormatter, ArrayList<String> values, Iterator<Cell> cellIterator) {
         while (cellIterator.hasNext()) {
