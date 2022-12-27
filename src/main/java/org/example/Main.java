@@ -161,28 +161,26 @@ public class Main {
 
     private static String getPointerIndex(Cell cell, List<Integer> pointerHeaderIndex, Sheet sheet) {
         Row sheetPointerHeaderRow = sheet.getRow(pointerHeaderIndex.get(0));
+//        System.out.println("sheetPointerHeaderRow: " + pointerHeaderIndex.get(0));
         int cellColumnIndex = cell.getColumnIndex();
-        if (sheetPointerHeaderRow.getCell(cellColumnIndex).toString() != null) {
-            return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
-        } else {
-            while (sheetPointerHeaderRow.getCell(cellColumnIndex).toString() == null) {
+        if (sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
+            while (sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
                 cellColumnIndex -= 1;
             }
-            return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
         }
+        System.out.println(sheetPointerHeaderRow.getCell(cellColumnIndex).toString());
+        return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
     }
 
     private static String getClarityIndex(Cell cell, int clarityHeaderRowIndex, Sheet sheet) {
         Row sheetClarityHeaderRow = sheet.getRow(clarityHeaderRowIndex);
         int cellColumnIndex = cell.getColumnIndex();
-        if (sheetClarityHeaderRow.getCell(cellColumnIndex).toString() != null) {
-            return sheetClarityHeaderRow.getCell(cellColumnIndex).toString();
-        } else {
-            while (sheetClarityHeaderRow.getCell(cellColumnIndex).toString() == null) {
+        if (sheetClarityHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
+            while (sheetClarityHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
                 cellColumnIndex -= 1;
             }
-            return sheetClarityHeaderRow.getCell(cellColumnIndex).toString();
         }
+        return sheetClarityHeaderRow.getCell(cellColumnIndex).toString();
     }
 
     private static String getCutIndex(Cell cell, int cutHeaderRowIndex, Sheet sheet) {
@@ -275,7 +273,6 @@ public class Main {
                     }
                     pointerHeaderIndex.add(cell.getRow().getRowNum());
                     pointerHeader = sheet.getRow(cell.getRow().getRowNum()).getCell(2).toString();
-                    System.out.println("pointerHeader: " + pointerHeader);
                 }
             } else {
                 continue;
@@ -321,9 +318,17 @@ public class Main {
             }
         }
 
-        for (Row row : sheet) {
-            for (Cell cell : row) {
-
+        for (int i = colorHeaderIndex.get(0) + 1; i < pointerHeaderIndex.get(3); i++) {
+            for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
+                System.out.println("Row: " + i + " : " + j);
+                Cell cell = sheet.getRow(i).getCell(j);
+                if (cell == null) {
+                    continue;
+                }
+                if (cell.getCellType() == CellType.STRING) {
+                    continue;
+                }
+                System.out.println("Cell: " + cell.toString());
                 String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
                 String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
                 String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
@@ -339,8 +344,9 @@ public class Main {
                 rowDict.put("Color", colorIndex);
                 rowDict.put("Florescence", florescenceIndex);
                 rowDict.put("Font", fontStyle);
-                rowDict.put("Value", cell.toString());
+                rowDict.put("Value", cell.getCellType() == CellType.BLANK ? "NONE" : cell.toString());
                 rowDict.put("Value_Color", cellColor);
+                System.out.println(rowDict);
                 sheetItems.add(rowDict);
             }
         }
