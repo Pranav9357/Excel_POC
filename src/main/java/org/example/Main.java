@@ -1,7 +1,7 @@
 package org.example;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -33,7 +33,7 @@ public class Main {
             if (table.equals("1")) {
                 parseTableOne(header, pointer, sheet, sheetItems);
             } else if (table.equals("2")) {
-//                parseTableTwo(header, pointer, sheet, sheetItems);
+                parseTableTwo(header, pointer, sheet, sheetItems);
             } else if (table.equals("3")) {
 //                parseTableThree(header, pointer, sheet, sheetItems);
             }
@@ -143,16 +143,7 @@ public class Main {
                 if (cell.getRowIndex() == 0 || cell.getColumnIndex() == 0) {
                     continue;
                 }
-                CellStyle style = cell.getCellStyle();
-                Font font = sheet.getWorkbook().getFontAt(style.getFontIndexAsInt());
-                String fontStyle = "";
-                if (font.getBold()) {
-                    fontStyle = "bold".toUpperCase();
-                } else if (font.getItalic()) {
-                    fontStyle = "italic".toUpperCase();
-                } else {
-                    fontStyle = "normal".toUpperCase();
-                }
+                String fontStyle = getFontStyle(cell, sheet);
                 // price value if cell is numeric or string
                 String price = cell.getCellType() == CellType.NUMERIC ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue();
                 // print row number
@@ -168,30 +159,191 @@ public class Main {
         }
     }
 
-
-    private static void getRowValues(DataFormatter dataFormatter, ArrayList<String> values, Iterator<Cell> cellIterator) {
-        while (cellIterator.hasNext()) {
-            Cell cell = cellIterator.next();
-            if (cell.getColumnIndex() != 0) {
-                String cellValue = dataFormatter.formatCellValue(cell);
-                if (!cellValue.isEmpty()) {
-                    values.add(cellValue);
-                    // get cell properties like font, color, etc
-                    System.out.println(cell.getCellStyle());
-                } else {
-                    continue;
-                }
+    private static String getPointerIndex(Cell cell, List<Integer> pointerHeaderIndex, Sheet sheet) {
+        Row sheetPointerHeaderRow = sheet.getRow(pointerHeaderIndex.get(0));
+        int cellColumnIndex = cell.getColumnIndex();
+        if (sheetPointerHeaderRow.getCell(cellColumnIndex).toString() != null) {
+            return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
+        } else {
+            while (sheetPointerHeaderRow.getCell(cellColumnIndex).toString() == null) {
+                cellColumnIndex -= 1;
             }
+            return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
         }
     }
 
-    private static boolean isRowEmpty(Row row) {
-        for (int c = row.getFirstCellNum(); c < row.getLastCellNum(); c++) {
-            Cell cell = row.getCell(c);
-            if (cell != null && cell.getCellType() != CellType.BLANK)
-                return false;
+    private static String getClarityIndex(Cell cell, int clarityHeaderRowIndex, Sheet sheet) {
+        Row sheetClarityHeaderRow = sheet.getRow(clarityHeaderRowIndex);
+        int cellColumnIndex = cell.getColumnIndex();
+        if (sheetClarityHeaderRow.getCell(cellColumnIndex).toString() != null) {
+            return sheetClarityHeaderRow.getCell(cellColumnIndex).toString();
+        } else {
+            while (sheetClarityHeaderRow.getCell(cellColumnIndex).toString() == null) {
+                cellColumnIndex -= 1;
+            }
+            return sheetClarityHeaderRow.getCell(cellColumnIndex).toString();
         }
-        return true;
+    }
+
+    private static String getCutIndex(Cell cell, int cutHeaderRowIndex, Sheet sheet) {
+        Row sheetCutHeaderRow = sheet.getRow(cutHeaderRowIndex);
+        int cellColumnIndex = cell.getColumnIndex();
+        return sheetCutHeaderRow.getCell(cellColumnIndex).toString();
+    }
+
+    private static String getFlorescenceIndex(Cell cell, List<Integer> florescenceHeaderIndex, Sheet sheet) {
+        int cellRowIndex = cell.getRowIndex();
+        String sheetFlorescenceValue = sheet.getRow(cellRowIndex).getCell(florescenceHeaderIndex.get(1)).toString();
+        return sheetFlorescenceValue.toUpperCase();
+    }
+
+    private static String getColorIndex(Cell cell, List<Integer> colorHeaderIndex, Sheet sheet) {
+        int cellRowIndex = cell.getRowIndex();
+        String sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)) != null ? sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString() : "NONE";
+        if (sheetColorValue != null) {
+            return sheetColorValue;
+        } else {
+            while (sheetColorValue == null) {
+                cellRowIndex -= 1;
+                sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+            }
+            return sheetColorValue;
+        }
+    }
+
+    private static String getCellColor(Cell cell, Sheet sheet) {
+        CellStyle style = cell.getCellStyle();
+        if (style.getFillBackgroundColorColor() != null) {
+            System.out.println("Row: " + cell.getRowIndex() + " : " + cell.getColumnIndex());
+            System.out.println("Color: " + XSSFColor.toXSSFColor(style.getFillForegroundColorColor()).getARGBHex());
+            XSSFColor argbColor = XSSFColor.toXSSFColor(style.getFillForegroundColorColor());
+            if (argbColor.getARGBHex().equals("FF000000")) {
+                return "black".toUpperCase();
+            } else if (argbColor.getARGBHex().equals("FF00B050")) {
+                return "green".toUpperCase();
+            } else if (argbColor.getARGBHex().equals("FFFF0000")) {
+                return "red".toUpperCase();
+            } else if (argbColor.getARGBHex().equals("FF0000FF")) {
+                return "blue".toUpperCase();
+            } else {
+                return "white".toUpperCase();
+            }
+        } else {
+            return "white".toUpperCase();
+        }
+
+    }
+
+    private static String getFontStyle(Cell cell, Sheet sheet) {
+        CellStyle style = cell.getCellStyle();
+        Font font = sheet.getWorkbook().getFontAt(style.getFontIndexAsInt());
+        String fontStyle = "";
+        if (font.getBold()) {
+            fontStyle = "bold".toUpperCase();
+        } else if (font.getItalic()) {
+            fontStyle = "italic".toUpperCase();
+        } else {
+            fontStyle = "normal".toUpperCase();
+        }
+        return fontStyle;
+    }
+
+    private static void parseTableTwo(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
+        // clarityHeader is set of clarity headers
+        List<Integer> pointerHeaderIndex = new ArrayList<>();
+        String pointerHeader = "";
+        Set<String> clarityHeader = new HashSet<>();
+        int clarityHeaderRowIndex = 0;
+        Set<String> cutHeader = new HashSet<>();
+        int cutHeaderRowIndex = 0;
+        List<Integer> colorHeaderIndex = new ArrayList<>();
+        List<Integer> florescenceHeaderIndex = new ArrayList<>();
+        List<String> florescenceHeader = new ArrayList<>();
+        florescenceHeader.add("None");
+        florescenceHeader.add("Faint");
+        florescenceHeader.add("Medium");
+        florescenceHeader.add("Strong");
+        for (Row row : sheet) {
+            if (row.getCell(0) == null) {
+                continue;
+            }
+            System.out.println(row.getCell(0).toString().equals("Range =>"));
+            if (row.getCell(0).toString().equals("Range =>")) {
+                for (Cell cell : row) {
+                    if (cell.toString().isEmpty()) {
+                        continue;
+                    }
+                    pointerHeaderIndex.add(cell.getRow().getRowNum());
+                    pointerHeader = sheet.getRow(cell.getRow().getRowNum()).getCell(2).toString();
+                    System.out.println("pointerHeader: " + pointerHeader);
+                }
+            } else {
+                continue;
+            }
+        }
+
+        // Loop through the sheet and get the data
+        for (Row row : sheet) {
+            if (row.getCell(0) == null) {
+                continue;
+            }
+            if (row.getCell(0).toString().equals("Clarity =>")) {
+                for (Cell cell : row) {
+                    if (cell.toString().isEmpty()) {
+                        continue;
+                    }
+                    clarityHeader.add(cell.toString());
+                    clarityHeaderRowIndex = cell.getRow().getRowNum();
+                }
+            } else if (row.getCell(0).toString().equals("Cut =>")) {
+                for (Cell cell : row) {
+                    if (cell.toString().isEmpty()) {
+                        continue;
+                    }
+                    cutHeader.add(cell.toString());
+                    cutHeaderRowIndex = cell.getRow().getRowNum();
+                }
+            } else if (row.getCell(0).toString().equals("Color")) {
+                for (Cell cell : row) {
+                    if (cell.toString().isEmpty()) {
+                        continue;
+                    }
+                    if (cell.toString().equals("Color")) {
+                        colorHeaderIndex.add(cell.getRow().getRowNum());
+                        colorHeaderIndex.add(cell.getColumnIndex());
+                    } else if (cell.toString().equals("Florescence")) {
+                        florescenceHeaderIndex.add(cell.getRow().getRowNum());
+                        florescenceHeaderIndex.add(cell.getColumnIndex());
+                    }
+                }
+            } else {
+                continue;
+            }
+        }
+
+        for (Row row : sheet) {
+            for (Cell cell : row) {
+
+                String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
+                String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
+                String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
+                String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
+                String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
+                String cellColor = getCellColor(cell, sheet);
+                String fontStyle = getFontStyle(cell, sheet);
+
+                Map<String, String> rowDict = new HashMap<>();
+                rowDict.put("Pointer", pointerIndex);
+                rowDict.put("Clarity", clarityIndex);
+                rowDict.put("Cut", cutIndex);
+                rowDict.put("Color", colorIndex);
+                rowDict.put("Florescence", florescenceIndex);
+                rowDict.put("Font", fontStyle);
+                rowDict.put("Value", cell.toString());
+                rowDict.put("Value_Color", cellColor);
+                sheetItems.add(rowDict);
+            }
+        }
     }
 
     private static void excelToCsv(String filePath, String table) {
