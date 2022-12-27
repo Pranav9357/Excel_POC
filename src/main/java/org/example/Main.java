@@ -137,26 +137,26 @@ public class Main {
                 break;
             }
             for (Cell cell : row) {
-                if (cell == null) {
+                if (cell.getCellType() == CellType.BLANK) {
                     continue;
                 }
                 if (cell.getRowIndex() == 0 || cell.getColumnIndex() == 0) {
                     continue;
                 }
                 CellStyle style = cell.getCellStyle();
+                Font font = sheet.getWorkbook().getFontAt(style.getFontIndexAsInt());
                 String fontStyle = "";
-                System.out.println("fontStyle: " + style);
-//                if (style.getFont().getBold()) {
-//                    fontStyle = "bold".toUpperCase();
-//                } else if (style.getFont().getItalic()) {
-//                    fontStyle = "italic".toUpperCase();
-//                } else {
-//                    fontStyle = "normal".toUpperCase();
-//                }
+                if (font.getBold()) {
+                    fontStyle = "bold".toUpperCase();
+                } else if (font.getItalic()) {
+                    fontStyle = "italic".toUpperCase();
+                } else {
+                    fontStyle = "normal".toUpperCase();
+                }
                 // price value if cell is numeric or string
                 String price = cell.getCellType() == CellType.NUMERIC ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue();
                 // print row number
-                System.out.println("row number: " + cell.getRowIndex());
+//                System.out.println("row number: " + cell.getRowIndex());
                 Map<String, String> rowMap = new HashMap<>();
                 rowMap.put("Pointer", pointer);
                 rowMap.put("Clarity", sheet.getRow(0).getCell(cell.getColumnIndex()).getStringCellValue());
