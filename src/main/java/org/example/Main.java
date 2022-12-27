@@ -2,70 +2,182 @@ package org.example;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Main {
     private static final String FILE_NAME = "SG_Final_22.189.xlsx";
     private static final String DECIMAL_TO_DECIMAL = "([0-9]+\\.[0-9]+) To ([0-9]+\\.[0-9]+)";
     private static final String STRING_DASH_DECIMAL_DASH_DECIMAL = "^[A-Z]+-[0-9]\\.[0-9]+-[0-9]\\.[0-9]+$";
 
-    public static void main(String[] args) throws Exception {
-        Workbook workbook = readExcelFileFromResourceFolder();
-        DataFormatter dataFormatter = new DataFormatter();
-        ArrayList<Integer> sheetPositions = getSheetPositions(workbook);
-        System.out.println(sheetPositions.size());
-        ArrayList<HashMap<String, HashMap<String, HashMap<String, Integer>>>> sheetData = new ArrayList<>();
-        for (int i = 0; i < sheetPositions.size(); i++) {
-            Integer sheetPosition = sheetPositions.get(i);
-            Sheet sheet = workbook.getSheetAt(sheetPosition);
-            Iterator<Row> rowIterator = sheet.rowIterator();
-            HashMap<String, HashMap<String, Integer>> sheetDataMap = new HashMap<>();
-            ArrayList<String> headers = new ArrayList<>();
-            ArrayList<String> values = new ArrayList<>();
-            label:
-            while (rowIterator.hasNext()) {
-                // check if it is 1st row, if yes then ignore first column of the row and set the column name as key and column number as value and add it to the map
-                Row row = rowIterator.next();
-                if (row.getRowNum() == 0) {
-                    Iterator<Cell> cellIterator = row.cellIterator();
-                    getRowValues(dataFormatter, headers, cellIterator);
-                } else {
-                    if (isRowEmpty(row)) {
-                        break label;
-                    }
-                    Cell firstCell = row.getCell    (0);
-                    String firstCellValue = dataFormatter.formatCellValue(firstCell);
-                    if (!firstCellValue.isEmpty()) {
-                        Iterator<Cell> cellIterator = row.cellIterator();
-                        HashMap<String, Integer> rowMap = new HashMap<>();
-                        getRowValues(dataFormatter, values, cellIterator);
-                    }
-                    HashMap<String, Integer> innerMap = new HashMap<>();
-                    for (int j = 0; j < headers.size(); j++) {
-                        innerMap.put(headers.get(j), Integer.parseInt(values.get(j)));
-                    }
-                    sheetDataMap.put(firstCellValue, innerMap);
-                }
-            }
-            HashMap<String, HashMap<String, HashMap<String, Integer>>> sheetMap = new HashMap<>();
-            sheetMap.put(workbook.getSheetName(sheetPosition), sheetDataMap);
-            sheetData.add(sheetMap);
-        }
-        sheetData.forEach(System.out::println);
-        workbook.close();
+    public static void main(String[] args) {
+        String fileName = args[0];
+        String table = args[1];
+        excelToCsv(fileName, table);
     }
 
+    private static void parseData(List<XSSFSheet> list, String table) {
+        List<Map<String, List<Map<String, String>>>> sheetTable = new ArrayList<>();
+        for (Sheet sheet : list) {
+            List<Map<String, String>> sheetItems = new ArrayList<>();
+            List<String> header = new ArrayList<>();
+            String pointer = "";
+
+            if (table.equals("1")) {
+                parseTableOne(header, pointer, sheet, sheetItems);
+            } else if (table.equals("2")) {
+//                parseTableTwo(header, pointer, sheet, sheetItems);
+            } else if (table.equals("3")) {
+//                parseTableThree(header, pointer, sheet, sheetItems);
+            }
+
+            Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
+            sheetMap.put(sheet.getSheetName(), sheetItems);
+            sheetTable.add(sheetMap);
+        }
+        convertToCsv(sheetTable, table);
+    }
+
+    private static void convertToCsv(List<Map<String, List<Map<String, String>>>> sheetTable, String table) {
+        List<List<String>> csvTable = new ArrayList<>();
+        if (table.equals("1")) {
+            List<String> header = Arrays.asList("Pointer", "Clarity", "Color", "Price", "Font");
+            for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
+                for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
+                    for (Map<String, String> item : entry.getValue()) {
+                        List<String> row = new ArrayList<>();
+                        row.add(item.get("Pointer"));
+                        row.add(item.get("Clarity"));
+                        row.add(item.get("Color"));
+                        row.add(item.get("Price"));
+                        row.add(item.get("Font"));
+                        csvTable.add(row);
+                    }
+                }
+            }
+            saveCsv(csvTable, header, table);
+        } else if (table.equals("2")) {
+            List<String> header = Arrays.asList("Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
+            for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
+                for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
+                    for (Map<String, String> item : entry.getValue()) {
+                        List<String> row = new ArrayList<>();
+                        row.add(item.get("Pointer"));
+                        row.add(item.get("Clarity"));
+                        row.add(item.get("Cut"));
+                        row.add(item.get("Color"));
+                        row.add(item.get("Florescence"));
+                        row.add(item.get("Font"));
+                        row.add(item.get("Value"));
+                        row.add(item.get("Value_Color"));
+                        csvTable.add(row);
+                    }
+                }
+            }
+            saveCsv(csvTable, header, table);
+        } else if (table.equals("3")) {
+            List<String> header = Arrays.asList("Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
+            for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
+                for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
+                    for (Map<String, String> item : entry.getValue()) {
+                        List<String> row = new ArrayList<>();
+                        row.add(item.get("Pointer"));
+                        row.add(item.get("Clarity"));
+                        row.add(item.get("Cut"));
+                        row.add(item.get("Color"));
+                        row.add(item.get("Florescence"));
+                        row.add(item.get("Font"));
+                        row.add(item.get("Value"));
+                        row.add(item.get("Value_Color"));
+                        csvTable.add(row);
+                    }
+                }
+            }
+            saveCsv(csvTable, header, table);
+        }
+    }
+
+    private static void saveCsv(List<List<String>> csvTable, List<String> header, String table) {
+        try {
+            FileWriter csvWriter = new FileWriter(String.format("table_%s.csv", table));
+            csvWriter.append(String.join(",", header));
+            csvWriter.append("\n");
+            for (List<String> row : csvTable) {
+                csvWriter.append(String.join(",", row));
+                csvWriter.append("\n");
+            }
+            csvWriter.flush();
+            csvWriter.close();
+            System.out.println("Data inserted successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void parseTableOne(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
+        for (Row row : sheet) {
+            for (Cell cell : row) {
+                if (cell != null) {
+                    header.add(cell.getStringCellValue());
+                }
+            }
+            pointer = header.get(0);
+            header = header.subList(1, header.size());
+            break;
+        }
+        for (Row row : sheet) {
+            if (row.getCell(0) == null) {
+                break;
+            }
+            for (Cell cell : row) {
+                if (cell == null) {
+                    continue;
+                }
+                if (cell.getColumnIndex() == 0) {
+                    continue;
+                }
+                CellStyle style = cell.getCellStyle();
+                String fontStyle = "";
+                System.out.println("fontStyle: " + style);
+//                if (style.getFont().getBold()) {
+//                    fontStyle = "bold".toUpperCase();
+//                } else if (style.getFont().getItalic()) {
+//                    fontStyle = "italic".toUpperCase();
+//                } else {
+//                    fontStyle = "normal".toUpperCase();
+//                }
+                // price value if cell is numeric or string
+                String price = cell.getCellType() == CellType.NUMERIC ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue();
+                // print row number
+                System.out.println("row number: " + cell.getRowIndex());
+                Map<String, String> rowMap = new HashMap<>();
+                rowMap.put("Pointer", pointer);
+                rowMap.put("Clarity", sheet.getRow(0).getCell(cell.getColumnIndex()).getStringCellValue());
+                rowMap.put("Color", row.getCell(0).getStringCellValue());
+                rowMap.put("Price", price);
+                rowMap.put("Font", fontStyle);
+                sheetItems.add(rowMap);
+            }
+        }
+    }
+
+
     private static void getRowValues(DataFormatter dataFormatter, ArrayList<String> values, Iterator<Cell> cellIterator) {
-        while (cellIterator.hasNext()){
+        while (cellIterator.hasNext()) {
             Cell cell = cellIterator.next();
             if (cell.getColumnIndex() != 0) {
                 String cellValue = dataFormatter.formatCellValue(cell);
                 if (!cellValue.isEmpty()) {
                     values.add(cellValue);
+                    // get cell properties like font, color, etc
+                    System.out.println(cell.getCellStyle());
                 } else {
                     continue;
                 }
@@ -82,68 +194,26 @@ public class Main {
         return true;
     }
 
-    private static boolean isCellMerged(Cell cell, ArrayList<CellRangeAddress> mergedRegions) {
-        for (CellRangeAddress mergedRegion : mergedRegions) {
-            if (mergedRegion.isInRange(cell.getRowIndex(), cell.getColumnIndex())) {
-                return true;
+    private static void excelToCsv(String filePath, String table) {
+        try {
+            ClassLoader classLoader = Main.class.getClassLoader();
+            File file = new File(Objects.requireNonNull(classLoader.getResource(filePath)).getFile());
+            FileInputStream fileInputStream = new FileInputStream(file);
+            XSSFWorkbook workbook = new XSSFWorkbook(fileInputStream);
+            List<XSSFSheet> sheets = new ArrayList<>();
+            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                String sheetName = workbook.getSheetName(i);
+                if (Pattern.matches(DECIMAL_TO_DECIMAL, sheetName) || Pattern.matches(STRING_DASH_DECIMAL_DASH_DECIMAL, sheetName)) {
+                    sheets.add(workbook.getSheet(sheetName));
+                }
             }
+            System.out.println("Total number of sheets: " + sheets.size());
+            // only keep 1 sheet for testing
+            sheets = sheets.subList(0, 1);
+            parseData(sheets, table);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return false;
-    }
-
-    private static ArrayList<CellRangeAddress> getMergedRegions(Sheet sheet) {
-        ArrayList<CellRangeAddress> mergedRegions = new ArrayList<>();
-        for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
-            mergedRegions.add(sheet.getMergedRegion(i));
-        }
-        return mergedRegions;
-    }
-
-    private static Workbook readExcelFileFromResourceFolder() throws Exception {
-        ClassLoader classLoader = Main.class.getClassLoader();
-        File file = new File(Objects.requireNonNull(classLoader.getResource(Main.FILE_NAME)).getFile());
-        FileInputStream fileInputStream = new FileInputStream(file);
-        return new XSSFWorkbook(fileInputStream);
-    }
-
-    private static ArrayList<Integer> getSheetPositions(Workbook workbook) {
-        int sheetCount = 0;
-        ArrayList<Integer> sheetPositions = new ArrayList<>();
-        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-            Sheet sheetAt = workbook.getSheetAt(i);
-            String sheetName = sheetAt.getSheetName();
-            if (sheetName.matches(DECIMAL_TO_DECIMAL) || sheetName.matches(STRING_DASH_DECIMAL_DASH_DECIMAL)) {
-                // System.out.println(sheetName);
-                sheetCount++;
-                sheetPositions.add(i);
-            }
-        }
-        int numberOfSheets = workbook.getNumberOfSheets();
-        // System.out.println("Total sheet count: " + numberOfSheets);
-        // System.out.println("Total sheet count with not required data: " + (numberOfSheets - sheetCount));
-        // System.out.println("Total sheet count with required data: " + sheetCount);
-        // System.out.println("Sheet positions with required data: " + sheetPositions);
-        // for (Integer sheetPosition : sheetPositions) {
-        //     System.out.println("Sheet position: " + sheetPosition);
-        // }
-        return sheetPositions;
-    }
-
-    private static void parseExcelSheet(Sheet sheet) {
-        int rows = sheet.getPhysicalNumberOfRows();
-        int cols = 0; // No of columns
-        int tmp = 0;
-
-        for (int i = 0; i < 10 || i < rows; i++) {
-            Row row = sheet.getRow(i);
-            if (row != null) {
-                tmp = sheet.getRow(i).getPhysicalNumberOfCells();
-                if (tmp > cols) cols = tmp;
-            }
-        }
-
-        String[][] data = new String[rows][cols];
-        System.out.println("rows: " + rows + " cols: " + cols);
-
     }
 }
+
