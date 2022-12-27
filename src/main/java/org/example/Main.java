@@ -140,7 +140,7 @@ public class Main {
                 if (cell == null) {
                     continue;
                 }
-                if (cell.getColumnIndex() == 0) {
+                if (cell.getRowIndex() == 0 || cell.getColumnIndex() == 0) {
                     continue;
                 }
                 CellStyle style = cell.getCellStyle();
