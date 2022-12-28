@@ -197,16 +197,18 @@ public class Main {
 
     private static String getColorIndex(Cell cell, List<Integer> colorHeaderIndex, Sheet sheet) {
         int cellRowIndex = cell.getRowIndex();
-        String sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)) != null ? sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString() : "NONE";
-        if (sheetColorValue != null) {
-            return sheetColorValue;
-        } else {
-            while (sheetColorValue == null) {
+        boolean isSheetColorBlank = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK;
+        String sheetColorValue = "";
+        System.out.println("sheetColorValue: " + isSheetColorBlank);
+        if (isSheetColorBlank) {
+            while (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
                 cellRowIndex -= 1;
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
-            return sheetColorValue;
+        } else {
+            sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
         }
+        return sheetColorValue;
     }
 
     private static String getCellColor(Cell cell, Sheet sheet) {
