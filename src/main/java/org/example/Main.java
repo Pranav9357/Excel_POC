@@ -34,7 +34,11 @@ public class Main {
             if (table.equals("1")) {
                 parseTableOne(header, pointer, sheet, sheetItems);
             } else if (table.equals("2")) {
-                parseTableTwo(header, pointer, sheet, sheetItems);
+                try {
+                    parseTableTwo(header, pointer, sheet, sheetItems);
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
             } else if (table.equals("3")) {
                 parseTableThree(header, pointer, sheet, sheetItems);
             }
@@ -49,11 +53,12 @@ public class Main {
     private static void convertToCsv(List<Map<String, List<Map<String, String>>>> sheetTable, String table) {
         List<List<String>> csvTable = new ArrayList<>();
         if (table.equals("1")) {
-            List<String> header = Arrays.asList("Pointer", "Clarity", "Color", "Price", "Font");
+            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Color", "Price", "Font");
             for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
                     for (Map<String, String> item : entry.getValue()) {
                         List<String> row = new ArrayList<>();
+                        row.add(item.get("Sheet"));
                         row.add(item.get("Pointer"));
                         row.add(item.get("Clarity"));
                         row.add(item.get("Color"));
@@ -65,11 +70,12 @@ public class Main {
             }
             saveCsv(csvTable, header, table);
         } else if (table.equals("2")) {
-            List<String> header = Arrays.asList("Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
+            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
             for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
                     for (Map<String, String> item : entry.getValue()) {
                         List<String> row = new ArrayList<>();
+                        row.add(item.get("Sheet"));
                         row.add(item.get("Pointer"));
                         row.add(item.get("Clarity"));
                         row.add(item.get("Cut"));
@@ -159,6 +165,7 @@ public class Main {
                 // print row number
 //                System.out.println("row number: " + cell.getRowIndex());
                 Map<String, String> rowMap = new HashMap<>();
+                rowMap.put("Sheet", sheet.getSheetName());
                 rowMap.put("Pointer", pointer);
                 rowMap.put("Clarity", sheet.getRow(0).getCell(cell.getColumnIndex()).getStringCellValue());
                 rowMap.put("Color", row.getCell(0).getStringCellValue());
@@ -207,16 +214,23 @@ public class Main {
 
     private static String getColorIndex(Cell cell, List<Integer> colorHeaderIndex, Sheet sheet) {
         int cellRowIndex = cell.getRowIndex();
-        String sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)) != null ? sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString() : "NONE";
-        if (sheetColorValue != null) {
-            return sheetColorValue;
-        } else {
-            while (sheetColorValue == null) {
+        boolean isSheetColorBlank = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK;
+        String sheetFlorescenceValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)+1).toString();
+        String sheetColorValue = "";
+        if (isSheetColorBlank && sheetFlorescenceValue.equals("None")) {
+            while (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
+                cellRowIndex += 1;
+                sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+            }
+        } else if (isSheetColorBlank) {
+            while (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
                 cellRowIndex -= 1;
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
-            return sheetColorValue;
+        } else {
+            sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
         }
+        return sheetColorValue;
     }
 
     private static String getCellColor(Cell cell, Sheet sheet) {
@@ -275,7 +289,6 @@ public class Main {
             if (row.getCell(0) == null) {
                 continue;
             }
-            System.out.println(row.getCell(0).toString().equals("Range =>"));
             if (row.getCell(0).toString().equals("Range =>")) {
                 for (Cell cell : row) {
                     if (cell.toString().isEmpty()) {
@@ -330,7 +343,7 @@ public class Main {
             }
         }
 
-        for (int i = colorHeaderIndex.get(0) + 1; i < pointerHeaderIndex.get(3); i++) {
+        for (int i = colorHeaderIndex.get(0) + 1; i < pointerHeaderIndex.get(2); i++) {
             for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
                 System.out.println("Row: " + i + " : " + j);
                 Cell cell = sheet.getRow(i).getCell(j);
@@ -340,7 +353,7 @@ public class Main {
                 if (cell.getCellType() == CellType.STRING) {
                     continue;
                 }
-                System.out.println("Cell: " + cell.toString());
+                System.out.println("Cell: " + cell);
                 String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
                 String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
                 String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
@@ -350,6 +363,7 @@ public class Main {
                 String fontStyle = getFontStyle(cell, sheet);
 
                 Map<String, String> rowDict = new HashMap<>();
+                rowDict.put("Sheet", sheet.getSheetName());
                 rowDict.put("Pointer", pointerIndex);
                 rowDict.put("Clarity", clarityIndex);
                 rowDict.put("Cut", cutIndex);
@@ -358,7 +372,7 @@ public class Main {
                 rowDict.put("Font", fontStyle);
                 rowDict.put("Value", cell.getCellType() == CellType.BLANK ? "NONE" : cell.toString());
                 rowDict.put("Value_Color", cellColor);
-                System.out.println(rowDict);
+//                System.out.println(rowDict);
                 sheetItems.add(rowDict);
             }
         }
@@ -501,7 +515,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-            sheets = sheets.subList(0, 1);
+//            sheets = sheets.subList(0, 5);
             parseData(sheets, table);
         } catch (IOException e) {
             e.printStackTrace();
