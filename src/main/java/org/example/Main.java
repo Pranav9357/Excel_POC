@@ -40,7 +40,11 @@ public class Main {
                     e.printStackTrace();
                 }
             } else if (table.equals("3")) {
-                parseTableThree(header, pointer, sheet, sheetItems);
+                try {
+                    parseTableThree(header, pointer, sheet, sheetItems);
+                } catch (NullPointerException e) {
+                    sheet.rowIterator();
+                }
             }
 
             Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
@@ -90,11 +94,12 @@ public class Main {
             }
             saveCsv(csvTable, header, table);
         } else if (table.equals("3")) {
-            List<String> header = Arrays.asList("Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
+            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
             for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
                     for (Map<String, String> item : entry.getValue()) {
                         List<String> row = new ArrayList<>();
+                        row.add(item.get("Sheet"));
                         row.add(item.get("Pointer"));
                         row.add(item.get("Clarity"));
                         row.add(item.get("Cut"));
@@ -180,12 +185,13 @@ public class Main {
         Row sheetPointerHeaderRow = sheet.getRow(pointerHeaderIndex.get(0));
 //        System.out.println("sheetPointerHeaderRow: " + pointerHeaderIndex.get(0));
         int cellColumnIndex = cell.getColumnIndex();
+        System.out.println("Cell type" + sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType());
         if (sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
             while (sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
                 cellColumnIndex -= 1;
             }
         }
-        System.out.println(sheetPointerHeaderRow.getCell(cellColumnIndex).toString());
+        System.out.println("cell value " + sheetPointerHeaderRow.getCell(cellColumnIndex).toString());
         return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
     }
 
@@ -343,10 +349,15 @@ public class Main {
             }
         }
 
+        label:
         for (int i = colorHeaderIndex.get(0) + 1; i < pointerHeaderIndex.get(2); i++) {
             for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
                 System.out.println("Row: " + i + " : " + j);
+                System.out.println("sheet colum" + sheet.getRow(i).getCell(j).getCellStyle().getFontIndexAsInt());
                 Cell cell = sheet.getRow(i).getCell(j);
+                if(sheet.getRow(i).getCell(j).getCellStyle().getFontIndexAsInt() == 3) {
+                    continue label;
+                }
                 if (cell == null) {
                     continue;
                 }
@@ -381,7 +392,6 @@ public class Main {
     private static void parseTableThree(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
         // clarityHeader is set of clarity headers
         List<Integer> pointerHeaderIndex = new ArrayList<>();
-        int lastPointer = 0;
         String pointerHeader = "";
         Set<String> clarityHeader = new HashSet<>();
         int clarityHeaderRowIndex = 0;
@@ -407,14 +417,8 @@ public class Main {
                     pointerHeaderIndex.add(cell.getRow().getRowNum());
                     pointerHeader = sheet.getRow(cell.getRow().getRowNum()).getCell(2).toString();
                 }
-            } else if(row.getCell(0).toString().equals("J++")){
-                for (Cell cell : row) {
-                    if (cell.toString().isEmpty()) {
-                        continue;
-                    }
-                    lastPointer = cell.getRow().getRowNum();
-                    System.out.println("last pointer" + lastPointer);
-                }
+            } else  {
+                continue;
             }
         }
 
@@ -457,17 +461,21 @@ public class Main {
             }
         }
 
-        for (int i = colorHeaderIndex.get(2) + 1; i <= lastPointer; i++) {
+        System.out.println("Color Index: " + colorHeaderIndex);
+        System.out.println("Pointer Index: " + pointerHeaderIndex);
+        System.out.println("Sheet Index: " + sheet.getLastRowNum());
+
+        for (int i = colorHeaderIndex.get(2) + 1; i < sheet.getLastRowNum(); i++) {
+            System.out.println("last column" + sheet.getRow(i).getLastCellNum());
+            System.out.println("colum name bbwbv" + sheet.getRow(i).getCell(0).getCellStyle().getFontIndexAsInt());
+//            if (sheet.getRow(i).getLastCellNum() == -1) {
+//                break;
+//            }
             for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
-                System.out.println("Row: " + i + " : " + j);
                 Cell cell = sheet.getRow(i).getCell(j);
                 if (cell == null) {
                     continue;
                 }
-                if (cell.getCellType() == CellType.STRING) {
-                    continue;
-                }
-                System.out.println("Cell: " + cell.toString());
                 String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
                 String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
                 String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
@@ -475,17 +483,18 @@ public class Main {
                 String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
                 String cellColor = getCellColor(cell, sheet);
                 String fontStyle = getFontStyle(cell, sheet);
-
+                System.out.println("RowData: " + cell.getCellType() + " | RowNum: " + cell.getRow().getRowNum());
                 Map<String, String> rowDict = new HashMap<>();
+                rowDict.put("Sheet", sheet.getSheetName());
                 rowDict.put("Pointer", pointerIndex);
                 rowDict.put("Clarity", clarityIndex);
                 rowDict.put("Cut", cutIndex);
                 rowDict.put("Color", colorIndex);
                 rowDict.put("Florescence", florescenceIndex);
                 rowDict.put("Font", fontStyle);
-                rowDict.put("Value", cell.getCellType() == CellType.BLANK ? "NONE" : cell.toString());
+                rowDict.put("Value", (cell.getCellType() == CellType.STRING || cell.getCellType() == CellType.NUMERIC) && cell.toString().isEmpty() ? "NONE" : cell.toString());
                 rowDict.put("Value_Color", cellColor);
-                System.out.println(rowDict);
+//                System.out.println(rowDict);
                 sheetItems.add(rowDict);
             }
         }
@@ -515,9 +524,9 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-//            sheets = sheets.subList(0, 5);
+            sheets = sheets.subList(0, 1);
             parseData(sheets, table);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
