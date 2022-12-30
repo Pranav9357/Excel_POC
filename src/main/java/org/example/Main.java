@@ -30,21 +30,18 @@ public class Main {
             List<Map<String, String>> sheetItems = new ArrayList<>();
             List<String> header = new ArrayList<>();
             String pointer = "";
+            Date date = new Date();
 
             if (table.equals("1")) {
-                parseTableOne(header, pointer, sheet, sheetItems);
+                parseTableOne(header, pointer, sheet, sheetItems, date);
             } else if (table.equals("2")) {
                 try {
-                    parseTableTwo(header, pointer, sheet, sheetItems);
-                } catch (NullPointerException e) {
+                    parseTableTwo(header, pointer, sheet, sheetItems, date);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else if (table.equals("3")) {
-                try {
                     parseTableThree(header, pointer, sheet, sheetItems);
-                } catch (NullPointerException e) {
-                    sheet.rowIterator();
-                }
             }
 
             Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
@@ -57,7 +54,7 @@ public class Main {
     private static void convertToCsv(List<Map<String, List<Map<String, String>>>> sheetTable, String table) {
         List<List<String>> csvTable = new ArrayList<>();
         if (table.equals("1")) {
-            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Color", "Price", "Font");
+            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Color", "Price", "Font", "Date");
             for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
                     for (Map<String, String> item : entry.getValue()) {
@@ -68,13 +65,14 @@ public class Main {
                         row.add(item.get("Color"));
                         row.add(item.get("Price"));
                         row.add(item.get("Font"));
+                        row.add(item.get("Date"));
                         csvTable.add(row);
                     }
                 }
             }
             saveCsv(csvTable, header, table);
         } else if (table.equals("2")) {
-            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color");
+            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color", "Date");
             for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
                     for (Map<String, String> item : entry.getValue()) {
@@ -88,6 +86,7 @@ public class Main {
                         row.add(item.get("Font"));
                         row.add(item.get("Value"));
                         row.add(item.get("Value_Color"));
+                        row.add(item.get("Date"));
                         csvTable.add(row);
                     }
                 }
@@ -133,7 +132,7 @@ public class Main {
         }
     }
 
-    private static void parseTableOne(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
+    private static void parseTableOne(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
         for (Row row : sheet) {
             for (Cell cell : row) {
                 if (cell != null) {
@@ -176,6 +175,7 @@ public class Main {
                 rowMap.put("Color", row.getCell(0).getStringCellValue());
                 rowMap.put("Price", price);
                 rowMap.put("Font", fontStyle);
+                rowMap.put("Date", String.valueOf(date));
                 sheetItems.add(rowMap);
             }
         }
@@ -191,7 +191,6 @@ public class Main {
                 cellColumnIndex -= 1;
             }
         }
-        System.out.println("cell value " + sheetPointerHeaderRow.getCell(cellColumnIndex).toString());
         return sheetPointerHeaderRow.getCell(cellColumnIndex).toString();
     }
 
@@ -276,7 +275,7 @@ public class Main {
         return fontStyle;
     }
 
-    private static void parseTableTwo(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
+    private static void parseTableTwo(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
         // clarityHeader is set of clarity headers
         List<Integer> pointerHeaderIndex = new ArrayList<>();
         String pointerHeader = "";
@@ -383,6 +382,7 @@ public class Main {
                 rowDict.put("Font", fontStyle);
                 rowDict.put("Value", cell.getCellType() == CellType.BLANK ? "NONE" : cell.toString());
                 rowDict.put("Value_Color", cellColor);
+                rowDict.put("Date", String.valueOf(date));
 //                System.out.println(rowDict);
                 sheetItems.add(rowDict);
             }
@@ -467,7 +467,6 @@ public class Main {
 
         for (int i = colorHeaderIndex.get(2) + 1; i < sheet.getLastRowNum(); i++) {
             System.out.println("last column" + sheet.getRow(i).getLastCellNum());
-            System.out.println("colum name bbwbv" + sheet.getRow(i).getCell(0).getCellStyle().getFontIndexAsInt());
 //            if (sheet.getRow(i).getLastCellNum() == -1) {
 //                break;
 //            }
@@ -524,7 +523,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-            sheets = sheets.subList(0, 1);
+//            sheets = sheets.subList(0, 1);
             parseData(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
