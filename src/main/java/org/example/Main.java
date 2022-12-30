@@ -537,7 +537,6 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-//            sheets = sheets.subList(255, 256);
             parseData(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
