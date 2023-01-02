@@ -360,41 +360,39 @@ public class Main {
                 System.out.println("sheet colum" + sheet.getRow(i).getCell(j).getCellStyle().getFontIndexAsInt());
                 Cell cell = sheet.getRow(i).getCell(j);
                 try {
-                    if(sheet.getRow(i).getCell(j).getColumnIndex() != 0) {
+                    if (cell == null) {
                         continue;
                     }
+                    if (cell.getCellType() == CellType.STRING) {
+                        continue;
+                    }
+                    System.out.println("Cell: " + cell);
+                    String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
+                    String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
+                    String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
+                    String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
+                    String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
+                    String cellColor = getCellColor(cell, sheet);
+                    String fontStyle = getFontStyle(cell, sheet);
+
+                    Map<String, String> rowDict = new HashMap<>();
+                    rowDict.put("Sheet", sheet.getSheetName());
+                    rowDict.put("Pointer", pointerIndex);
+                    rowDict.put("Clarity", clarityIndex);
+                    rowDict.put("Cut", cutIndex);
+                    rowDict.put("Color", colorIndex);
+                    rowDict.put("Florescence", florescenceIndex);
+                    rowDict.put("Font", fontStyle);
+                    rowDict.put("Value", (cell.getCellType() == CellType.BLANK || cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.STRING) ? "NONE" : cell.toString());
+                    rowDict.put("Value_Color", cellColor);
+                    rowDict.put("Date", String.valueOf(date));
+//                System.out.println(rowDict);
+                    sheetItems.add(rowDict);
                 } catch (Exception e) {
                     break;
                 }
-                if (cell == null) {
-                    continue;
-                }
-                if (cell.getCellType() == CellType.STRING) {
-                    continue;
-                }
-                System.out.println("Cell: " + cell);
-                String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
-                String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
-                String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
-                String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
-                String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
-                String cellColor = getCellColor(cell, sheet);
-                String fontStyle = getFontStyle(cell, sheet);
-
-                Map<String, String> rowDict = new HashMap<>();
-                rowDict.put("Sheet", sheet.getSheetName());
-                rowDict.put("Pointer", pointerIndex);
-                rowDict.put("Clarity", clarityIndex);
-                rowDict.put("Cut", cutIndex);
-                rowDict.put("Color", colorIndex);
-                rowDict.put("Florescence", florescenceIndex);
-                rowDict.put("Font", fontStyle);
-                rowDict.put("Value", (cell.getCellType() == CellType.BLANK || cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.STRING) ? "NONE" : cell.toString());
-                rowDict.put("Value_Color", cellColor);
-                rowDict.put("Date", String.valueOf(date));
-//                System.out.println(rowDict);
-                sheetItems.add(rowDict);
             }
+
         }
     }
 
