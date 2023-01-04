@@ -18,9 +18,12 @@ public class Main {
     private static final String DECIMAL_TO_DECIMAL = "([0-9]+\\.[0-9]+) To ([0-9]+\\.[0-9]+)";
     private static final String STRING_DASH_DECIMAL_DASH_DECIMAL = "^[A-Z]+-[0-9]\\.[0-9]+-[0-9]\\.[0-9]+$";
 
+    private static final String STRING_DECIMAL = "^[A-Za-z]+[0-9]";
+
     public static void main(String[] args) {
         String fileName = args[0];
         String table = args[1];
+        System.out.println(fileName);
         excelToCsv(fileName, table);
     }
 
@@ -46,6 +49,8 @@ public class Main {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            } else if (table.equals("4")) {
+                parseTableFour(header, pointer, sheet, sheetItems, date);
             }
 
             Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
@@ -183,6 +188,20 @@ public class Main {
                 rowMap.put("Date", String.valueOf(date));
                 sheetItems.add(rowMap);
             }
+        }
+    }
+
+    private static void parseTableFour(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
+        for (Row row : sheet) {
+            if(row.getRowNum() == 3) {
+                for (Cell cell : row) {
+                    if(cell != null) {
+                        header.add(cell.toString());
+                        System.out.println("header" + header);
+                    }
+                }
+            }
+            break;
         }
     }
 
@@ -511,25 +530,17 @@ public class Main {
         }
     }
 
-    private static boolean isCellMerged(Cell cell, ArrayList<CellRangeAddress> mergedRegions) {
-        for (CellRangeAddress mergedRegion : mergedRegions) {
-            if (mergedRegion.isInRange(cell.getRowIndex(), cell.getColumnIndex())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static void excelToCsv(String filePath, String table) {
         try {
             ClassLoader classLoader = Main.class.getClassLoader();
+            System.out.println("class path" + classLoader.getResource(filePath).getFile());
             File file = new File(Objects.requireNonNull(classLoader.getResource(filePath)).getFile());
             FileInputStream fileInputStream = new FileInputStream(file);
             XSSFWorkbook workbook = new XSSFWorkbook(fileInputStream);
             List<XSSFSheet> sheets = new ArrayList<>();
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                 String sheetName = workbook.getSheetName(i);
-                if (Pattern.matches(DECIMAL_TO_DECIMAL, sheetName) || Pattern.matches(STRING_DASH_DECIMAL_DASH_DECIMAL, sheetName)) {
+                if (Pattern.matches(DECIMAL_TO_DECIMAL, sheetName) || Pattern.matches(STRING_DASH_DECIMAL_DASH_DECIMAL, sheetName) || Pattern.matches(STRING_DECIMAL, sheetName)) {
                     sheets.add(workbook.getSheet(sheetName));
                 }
             }
