@@ -1,7 +1,8 @@
 package org.example;
 
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -14,7 +15,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class Main {
-    private static final String FILE_NAME = "SG_Final_22.189.xlsx";
+    private static final String FILE_NAME_FOR_XLSX = "SG_Final_22.189.xlsx";
+
+    private static final String FILE_NAME_FOR_XLS = "SURAT_STOCK_REPORT_02-01-2023.xls";
     private static final String DECIMAL_TO_DECIMAL = "([0-9]+\\.[0-9]+) To ([0-9]+\\.[0-9]+)";
     private static final String STRING_DASH_DECIMAL_DASH_DECIMAL = "^[A-Z]+-[0-9]\\.[0-9]+-[0-9]\\.[0-9]+$";
 
@@ -23,11 +26,14 @@ public class Main {
     public static void main(String[] args) {
         String fileName = args[0];
         String table = args[1];
-        System.out.println(fileName);
-        excelToCsv(fileName, table);
+        if (fileName.equals(FILE_NAME_FOR_XLSX)) {
+            excelToCsvForXlsx(fileName, table);
+        } else if (fileName.equals(FILE_NAME_FOR_XLS)){
+            excelToCsvForXls(fileName, table);
+        }
     }
 
-    private static void parseData(List<XSSFSheet> list, String table) {
+    private static void parseDataForXlsx(List<XSSFSheet> list, String table) {
         List<Map<String, List<Map<String, String>>>> sheetTable = new ArrayList<>();
         for (Sheet sheet : list) {
             List<Map<String, String>> sheetItems = new ArrayList<>();
@@ -49,8 +55,25 @@ public class Main {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            } else if (table.equals("4")) {
-                parseTableFour(header, pointer, sheet, sheetItems, date);
+            }
+
+            Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
+            sheetMap.put(sheet.getSheetName(), sheetItems);
+            sheetTable.add(sheetMap);
+        }
+        convertToCsv(sheetTable, table);
+    }
+
+    private static void parseDataForXls(List<HSSFSheet> list, String table) {
+        List<Map<String, List<Map<String, String>>>> sheetTable = new ArrayList<>();
+        for (Sheet sheet : list) {
+            List<Map<String, String>> sheetItems = new ArrayList<>();
+            List<String> header = new ArrayList<>();
+            String pointer = "";
+            Date date = new Date();
+
+            if (table.equals("1")) {
+                parseTableForNewExcel(header, pointer, sheet, sheetItems, date);
             }
 
             Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
@@ -191,17 +214,17 @@ public class Main {
         }
     }
 
-    private static void parseTableFour(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
+    private static void parseTableForNewExcel(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
         for (Row row : sheet) {
-            if(row.getRowNum() == 3) {
+            if(row.getRowNum() == 2) {
                 for (Cell cell : row) {
                     if(cell != null) {
                         header.add(cell.toString());
                         System.out.println("header" + header);
                     }
                 }
+                break;
             }
-            break;
         }
     }
 
@@ -530,7 +553,7 @@ public class Main {
         }
     }
 
-    private static void excelToCsv(String filePath, String table) {
+    private static void excelToCsvForXlsx(String filePath, String table) {
         try {
             ClassLoader classLoader = Main.class.getClassLoader();
             System.out.println("class path" + classLoader.getResource(filePath).getFile());
@@ -546,7 +569,29 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-            parseData(sheets, table);
+            parseDataForXlsx(sheets, table);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void excelToCsvForXls(String filePath, String table) {
+        try {
+            ClassLoader classLoader = Main.class.getClassLoader();
+            System.out.println("class path" + classLoader.getResource(filePath).getFile());
+            File file = new File(Objects.requireNonNull(classLoader.getResource(filePath)).getFile());
+            FileInputStream fileInputStream = new FileInputStream(file);
+            HSSFWorkbook workbook = new HSSFWorkbook(fileInputStream);
+            List<HSSFSheet> sheets = new ArrayList<>();
+            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                String sheetName = workbook.getSheetName(i);
+                if (Pattern.matches(DECIMAL_TO_DECIMAL, sheetName) || Pattern.matches(STRING_DASH_DECIMAL_DASH_DECIMAL, sheetName) || Pattern.matches(STRING_DECIMAL, sheetName)) {
+                    sheets.add(workbook.getSheet(sheetName));
+                }
+            }
+            System.out.println("Total number of sheets: " + sheets.size());
+            // only keep 1 sheet for testing
+            parseDataForXls(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
         }
