@@ -298,20 +298,38 @@ public class Main {
                 cellRowIndex += 1;
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
-        } else if (isSheetColorBlank) {
-            if (sheetFlorescenceValue.equals("Medium")) {
-                cellRowIndex -= 2;
+        } else if (isSheetColorBlank && sheetFlorescenceValue.equals("Faint")) {
+            while (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
+                cellRowIndex -= 1;
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
-            } else if (sheetFlorescenceValue.equals("Strong")) {
+            }
+        } else if (isSheetColorBlank && sheetFlorescenceValue.equals("Medium")) {
+            if (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
+                cellRowIndex -= 2;
+                if (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
+                    cellRowIndex += 1;
+                    sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+                }
+                sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+            }
+            sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+        } else if (isSheetColorBlank && sheetFlorescenceValue.equals("Strong")) {
+            if (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
                 cellRowIndex -= 3;
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
             sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
-        } else if (isSheetColorString) {
-            if(sheetFlorescenceValue.equals("Faint")) {
+        } else if (isSheetColorString && sheetFlorescenceValue.equals("Faint")) {
+            if (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.STRING) {
                 cellRowIndex -= 1;
+                if (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
+                    cellRowIndex += 1;
+                    sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+                }
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
+            sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+        } else if (isSheetColorString){
             sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
         }
         return sheetColorValue;
