@@ -219,7 +219,6 @@ public class Main {
     private static void parseTableForNewExcel(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
 
         int startPoint = 0;
-        Map<String, String> map = new HashMap<>();
 
         for (Row row : sheet) {
             if(row.getCell(0).toString().equals("Sr")) {
@@ -232,17 +231,18 @@ public class Main {
             }
         }
 
-        for (int i = startPoint + 1; i <= 5; i++) {
+        for (int i = startPoint + 1; i <= sheet.getLastRowNum(); i++) {
+            Map<String, String> map = new HashMap<>();
             for (int j = 0; j < sheet.getRow(i).getLastCellNum(); j++) {
                 Cell cell = sheet.getRow(i).getCell(j);
 
                 String stringValue = getHeaderIndex(cell, startPoint, sheet);
                 map.put(stringValue, cell.toString());
-                sheetItems.add(map);
             }
-            System.out.println(map);
+            sheetItems.add(map);
+//            System.out.println(map);
         }
-//        System.out.println(sheetItems);
+        System.out.println("SHT: "+ sheetItems);
     }
 
     private static String getPointerIndex(Cell cell, List<Integer> pointerHeaderIndex, Sheet sheet) {
@@ -290,6 +290,7 @@ public class Main {
     private static String getColorIndex(Cell cell, List<Integer> colorHeaderIndex, Sheet sheet) {
         int cellRowIndex = cell.getRowIndex();
         boolean isSheetColorBlank = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK;
+        boolean isSheetColorString = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.STRING;
         String sheetFlorescenceValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)+1).toString();
         String sheetColorValue = "";
         if (isSheetColorBlank && sheetFlorescenceValue.equals("None")) {
@@ -298,11 +299,19 @@ public class Main {
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
         } else if (isSheetColorBlank) {
-            while (sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).getCellType() == CellType.BLANK) {
+            if (sheetFlorescenceValue.equals("Medium")) {
+                cellRowIndex -= 2;
+                sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+            } else if (sheetFlorescenceValue.equals("Strong")) {
+                cellRowIndex -= 3;
+                sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+            }
+            sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
+        } else if (isSheetColorString) {
+            if(sheetFlorescenceValue.equals("Faint")) {
                 cellRowIndex -= 1;
                 sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
             }
-        } else {
             sheetColorValue = sheet.getRow(cellRowIndex).getCell(colorHeaderIndex.get(1)).toString();
         }
         return sheetColorValue;
@@ -592,7 +601,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-            sheets = sheets.subList(9, 10);
+//            sheets = sheets.subList(9, 10);
             parseDataForXlsx(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
