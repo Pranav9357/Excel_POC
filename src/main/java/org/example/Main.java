@@ -15,9 +15,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class Main {
-    private static final String FILE_NAME_FOR_XLSX = "SG_Final_22.189.xlsx";
-
-    private static final String FILE_NAME_FOR_XLS = "SURAT_STOCK_REPORT_02-01-2023.xls";
     private static final String DECIMAL_TO_DECIMAL = "([0-9]+\\.[0-9]+) To ([0-9]+\\.[0-9]+)";
     private static final String STRING_DASH_DECIMAL_DASH_DECIMAL = "^[A-Z]+-[0-9]\\.[0-9]+-[0-9]\\.[0-9]+$";
 
@@ -26,11 +23,7 @@ public class Main {
     public static void main(String[] args) {
         String fileName = args[0];
         String table = args[1];
-        if (fileName.equals(FILE_NAME_FOR_XLSX)) {
-            excelToCsvForXlsx(fileName, table);
-        } else if (fileName.equals(FILE_NAME_FOR_XLS)){
-            excelToCsvForXls(fileName, table);
-        }
+        excelToCsvForXlsx(fileName, table);
     }
 
     private static void parseDataForXlsx(List<XSSFSheet> list, String table) {
@@ -55,25 +48,8 @@ public class Main {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-
-            Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
-            sheetMap.put(sheet.getSheetName(), sheetItems);
-            sheetTable.add(sheetMap);
-        }
-        convertToCsv(sheetTable, table);
-    }
-
-    private static void parseDataForXls(List<HSSFSheet> list, String table) {
-        List<Map<String, List<Map<String, String>>>> sheetTable = new ArrayList<>();
-        for (Sheet sheet : list) {
-            List<Map<String, String>> sheetItems = new ArrayList<>();
-            List<String> header = new ArrayList<>();
-            String pointer = "";
-            Date date = new Date();
-
-            if (table.equals("1")) {
-                parseTableForNewExcel(header, pointer, sheet, sheetItems, date);
+            } else if (table.equals("4")) {
+                parseTableForNewExcel(header, pointer, sheet, sheetItems);
             }
 
             Map<String, List<Map<String, String>>> sheetMap = new HashMap<>();
@@ -140,6 +116,32 @@ public class Main {
                         row.add(item.get("Value"));
                         row.add(item.get("Value_Color"));
                         row.add(item.get("Date"));
+                        csvTable.add(row);
+                    }
+                }
+            }
+            saveCsv(csvTable, header, table);
+        } else if (table.equals("4")) {
+            List<String> header = Arrays.asList("Sr", "Kapan No", "Packet No", "Pcs", "Exp Wgt", "Lab", "Pointer", "Shape", "Color", "Purity", "Cut", "Fls", "Plan Value", "Last_modified_by", "Last_modified_date");
+            for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
+                for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
+                    for (Map<String, String> item : entry.getValue()) {
+                        List<String> row = new ArrayList<>();
+                        row.add(item.get("Sr"));
+                        row.add(item.get("Kapan No"));
+                        row.add(item.get("Packet No"));
+                        row.add(item.get("Pcs"));
+                        row.add(item.get("Exp Wgt"));
+                        row.add(item.get("Lab"));
+                        row.add(item.get("Pointer"));
+                        row.add(item.get("Shape"));
+                        row.add(item.get("Color"));
+                        row.add(item.get("Purity"));
+                        row.add(item.get("Cut"));
+                        row.add(item.get("Fls"));
+                        row.add(item.get("Plan Value"));
+                        row.add(item.get("Last_modified_by"));
+                        row.add(item.get("Last_modified_date"));
                         csvTable.add(row);
                     }
                 }
@@ -214,18 +216,33 @@ public class Main {
         }
     }
 
-    private static void parseTableForNewExcel(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
+    private static void parseTableForNewExcel(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems) {
+
+        int startPoint = 0;
+        Map<String, String> map = new HashMap<>();
+
         for (Row row : sheet) {
-            if(row.getRowNum() == 2) {
+            if(row.getCell(0).toString().equals("Sr")) {
                 for (Cell cell : row) {
-                    if(cell != null) {
-                        header.add(cell.toString());
-                        System.out.println("header" + header);
+                    if(cell.getCellType() == CellType.BLANK) {
+                        continue;
                     }
+                    startPoint = cell.getRow().getRowNum();
                 }
-                break;
             }
         }
+
+        for (int i = startPoint + 1; i <= 5; i++) {
+            for (int j = 0; j < sheet.getRow(i).getLastCellNum(); j++) {
+                Cell cell = sheet.getRow(i).getCell(j);
+
+                String stringValue = getHeaderIndex(cell, startPoint, sheet);
+                map.put(stringValue, cell.toString());
+                sheetItems.add(map);
+            }
+            System.out.println(map);
+        }
+//        System.out.println(sheetItems);
     }
 
     private static String getPointerIndex(Cell cell, List<Integer> pointerHeaderIndex, Sheet sheet) {
@@ -256,6 +273,12 @@ public class Main {
         Row sheetCutHeaderRow = sheet.getRow(cutHeaderRowIndex);
         int cellColumnIndex = cell.getColumnIndex();
         return sheetCutHeaderRow.getCell(cellColumnIndex).toString();
+    }
+
+    private static String getHeaderIndex(Cell cell, int headerRowIndex, Sheet sheet) {
+        Row sheetHeaderRow = sheet.getRow(headerRowIndex);
+        int cellColumnIndex = cell.getColumnIndex();
+        return sheetHeaderRow.getCell(cellColumnIndex).toString();
     }
 
     private static String getFlorescenceIndex(Cell cell, List<Integer> florescenceHeaderIndex, Sheet sheet) {
@@ -569,29 +592,8 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
+            sheets = sheets.subList(9, 10);
             parseDataForXlsx(sheets, table);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void excelToCsvForXls(String filePath, String table) {
-        try {
-            ClassLoader classLoader = Main.class.getClassLoader();
-            System.out.println("class path" + classLoader.getResource(filePath).getFile());
-            File file = new File(Objects.requireNonNull(classLoader.getResource(filePath)).getFile());
-            FileInputStream fileInputStream = new FileInputStream(file);
-            HSSFWorkbook workbook = new HSSFWorkbook(fileInputStream);
-            List<HSSFSheet> sheets = new ArrayList<>();
-            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                String sheetName = workbook.getSheetName(i);
-                if (Pattern.matches(DECIMAL_TO_DECIMAL, sheetName) || Pattern.matches(STRING_DASH_DECIMAL_DASH_DECIMAL, sheetName) || Pattern.matches(STRING_DECIMAL, sheetName)) {
-                    sheets.add(workbook.getSheet(sheetName));
-                }
-            }
-            System.out.println("Total number of sheets: " + sheets.size());
-            // only keep 1 sheet for testing
-            parseDataForXls(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
         }
