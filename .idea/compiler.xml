@@ -7,8 +7,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Excel_Read_POC" />
-        <module name="Excel_POC" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Excel_POC" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>
