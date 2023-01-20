@@ -80,7 +80,7 @@ public class Main {
             }
             saveCsv(csvTable, header, table);
         } else if (table.equals("2")) {
-            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color", "Date");
+            List<String> header = Arrays.asList("Sheet", "Pointer", "Clarity", "Cut", "Color", "Florescence", "Font", "Value", "Value_Color", "Date", "Cert_cost");
             for (Map<String, List<Map<String, String>>> sheet : sheetTable) {
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheet.entrySet()) {
                     for (Map<String, String> item : entry.getValue()) {
@@ -95,6 +95,7 @@ public class Main {
                         row.add(item.get("Value"));
                         row.add(item.get("Value_Color"));
                         row.add(item.get("Date"));
+                        row.add(item.get("Cert_cost"));
                         csvTable.add(row);
                     }
                 }
@@ -387,6 +388,26 @@ public class Main {
         florescenceHeader.add("Faint");
         florescenceHeader.add("Medium");
         florescenceHeader.add("Strong");
+
+        String value = null;
+
+        for (int l = 0; l <= sheet.getLastRowNum(); l++) {
+            if(sheet.getLastRowNum() == l) {
+                for(int k = sheet.getRow(l).getFirstCellNum(); k < sheet.getRow(l).getLastCellNum(); k++) {
+                    Cell cell = sheet.getRow(l).getCell(k);
+                    try {
+                        if(cell.getCellType() == CellType.NUMERIC) {
+                            value = cell.toString();
+                        }
+                    } catch (Exception e) {
+                        break;
+                    }
+                }
+            }
+        }
+        System.out.println(value);
+
+
         for (Row row : sheet) {
             if (row.getCell(0) == null) {
                 continue;
@@ -478,6 +499,7 @@ public class Main {
                     rowDict.put("Value", (cell.getCellType() == CellType.BLANK || cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.STRING) ? "NONE" : cell.toString());
                     rowDict.put("Value_Color", cellColor);
                     rowDict.put("Date", String.valueOf(date));
+                    rowDict.put("Cert_cost", value);
 //                System.out.println(rowDict);
                     sheetItems.add(rowDict);
                 } catch (Exception e) {
@@ -619,7 +641,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-//            sheets = sheets.subList(9, 10);
+            sheets = sheets.subList(0, 1);
             parseDataForXlsx(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
