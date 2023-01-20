@@ -466,48 +466,96 @@ public class Main {
             }
         }
 
-        label:
+        System.out.println("sheet name" + sheet.getSheetName());
+
         for (int i = colorHeaderIndex.get(0) + 1; i < pointerHeaderIndex.get(2); i++) {
-            for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
-                System.out.println("Row: " + i + " : " + j);
-                System.out.println("sheet colum" + sheet.getRow(i).getCell(j).getCellStyle().getFontIndexAsInt());
-                Cell cell = sheet.getRow(i).getCell(j);
-                try {
-                    if (cell == null) {
-                        continue;
-                    }
-                    if (cell.getCellType() == CellType.STRING) {
-                        continue;
-                    }
-                    System.out.println("Cell: " + cell);
-                    String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
-                    String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
-                    String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
-                    String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
-                    String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
-                    String cellColor = getCellColor(cell, sheet);
-                    String fontStyle = getFontStyle(cell, sheet);
+            try {
+                for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
+                    System.out.println("Row: " + i + " : " + j);
+                    Cell cell = sheet.getRow(i).getCell(j);
+                    try {
+                        if (cell == null) {
+                            continue;
+                        }
+                        if (cell.getCellType() == CellType.STRING) {
+                            continue;
+                        }
+                        System.out.println("Cell: " + cell);
+                        String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
+                        String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
+                        String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
+                        String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
+                        String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
+                        String cellColor = getCellColor(cell, sheet);
+                        String fontStyle = getFontStyle(cell, sheet);
 
-                    Map<String, String> rowDict = new HashMap<>();
-                    rowDict.put("Sheet", sheet.getSheetName());
-                    rowDict.put("Pointer", pointerIndex);
-                    rowDict.put("Clarity", clarityIndex);
-                    rowDict.put("Cut", cutIndex);
-                    rowDict.put("Color", colorIndex);
-                    rowDict.put("Florescence", florescenceIndex);
-                    rowDict.put("Font", fontStyle);
-                    rowDict.put("Value", (cell.getCellType() == CellType.BLANK || cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.STRING) ? "NONE" : cell.toString());
-                    rowDict.put("Value_Color", cellColor);
-                    rowDict.put("Date", String.valueOf(date));
-                    rowDict.put("Cert_cost", value);
+                        Map<String, String> rowDict = new HashMap<>();
+                        rowDict.put("Sheet", sheet.getSheetName());
+                        rowDict.put("Pointer", pointerIndex);
+                        rowDict.put("Clarity", clarityIndex);
+                        rowDict.put("Cut", cutIndex);
+                        rowDict.put("Color", colorIndex);
+                        rowDict.put("Florescence", florescenceIndex);
+                        rowDict.put("Font", fontStyle);
+                        rowDict.put("Value", cell.getCellType() == CellType.BLANK ? "" : cell.toString());
+                        rowDict.put("Value_Color", cellColor);
+                        rowDict.put("Date", String.valueOf(date));
+                        rowDict.put("Cert_cost", value);
 //                System.out.println(rowDict);
-                    sheetItems.add(rowDict);
-                } catch (Exception e) {
-                    break;
+                        sheetItems.add(rowDict);
+                    } catch (Exception e) {
+                        break;
+                    }
                 }
+            } catch (Exception e) {
+                break;
             }
-
         }
+
+//        for (int i = colorHeaderIndex.get(2) + 1; i < sheet.getLastRowNum(); i++) {
+//            int row = sheet.getRow(i).getRowNum();
+//            try {
+//                if (sheet.getRow(i).getCell(1).getCellType() == CellType.BLANK) {
+//                    row -= 1;
+//                    break;
+//                }
+//            } catch (Exception e) {
+//                break;
+//            }
+//            try {
+//                for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
+//                    Cell cell = sheet.getRow(i).getCell(j);
+//                    if (cell == null) {
+//                        continue;
+//                    }
+//                    String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
+//                    String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
+//                    String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
+//                    String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
+//                    String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
+//                    String cellColor = getCellColor(cell, sheet);
+//                    String fontStyle = getFontStyle(cell, sheet);
+//                    System.out.println("RowData: " + cell.getCellType() + " | RowNum: " + cell.getRow().getRowNum());
+//                    Map<String, String> rowDict = new HashMap<>();
+//                    rowDict.put("Sheet", sheet.getSheetName());
+//                    rowDict.put("Pointer", pointerIndex);
+//                    rowDict.put("Clarity", clarityIndex);
+//                    rowDict.put("Cut", cutIndex);
+//                    rowDict.put("Color", colorIndex);
+//                    rowDict.put("Florescence", florescenceIndex);
+//                    rowDict.put("Font", fontStyle);
+//                    rowDict.put("Value", cell.getCellType() == CellType.STRING && cell.toString().isEmpty() ? "" : cell.toString());
+//                    rowDict.put("Value_Color", cellColor);
+//                    rowDict.put("Date", String.valueOf(date));
+//                    rowDict.put("Cert_cost", value);
+////                System.out.println(rowDict);
+//                    sheetItems.add(rowDict);
+//                }
+//            } catch (Exception e) {
+//                break;
+//            }
+//
+//        }
     }
 
     private static void parseTableThree(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date) {
@@ -587,40 +635,48 @@ public class Main {
 
         for (int i = colorHeaderIndex.get(2) + 1; i < sheet.getLastRowNum(); i++) {
             int row = sheet.getRow(i).getRowNum();
-            if (sheet.getRow(i).getCell(1).getCellType() == CellType.BLANK) {
-                row -= 1;
-                break;
-            }
-            for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
-                Cell cell = sheet.getRow(i).getCell(j);
-                try {
-                    if (cell == null) {
-                        continue;
-                    }
-                    String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
-                    String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
-                    String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
-                    String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
-                    String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
-                    String cellColor = getCellColor(cell, sheet);
-                    String fontStyle = getFontStyle(cell, sheet);
-                    System.out.println("RowData: " + cell.getCellType() + " | RowNum: " + cell.getRow().getRowNum());
-                    Map<String, String> rowDict = new HashMap<>();
-                    rowDict.put("Sheet", sheet.getSheetName());
-                    rowDict.put("Pointer", pointerIndex);
-                    rowDict.put("Clarity", clarityIndex);
-                    rowDict.put("Cut", cutIndex);
-                    rowDict.put("Color", colorIndex);
-                    rowDict.put("Florescence", florescenceIndex);
-                    rowDict.put("Font", fontStyle);
-                    rowDict.put("Value", (cell.getCellType() == CellType.BLANK || cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.STRING) && cell.toString().isEmpty() ? "NONE" : cell.toString());
-                    rowDict.put("Value_Color", cellColor);
-                    rowDict.put("Date", String.valueOf(date));
-//                System.out.println(rowDict);
-                    sheetItems.add(rowDict);
-                } catch (Exception e) {
+            try {
+                if (sheet.getRow(i).getCell(1).getCellType() == CellType.BLANK) {
+                    row -= 1;
                     break;
                 }
+            } catch (Exception e) {
+                break;
+            }
+            try {
+                for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
+                    Cell cell = sheet.getRow(i).getCell(j);
+                    try {
+                        if (cell == null) {
+                            continue;
+                        }
+                        String pointerIndex = getPointerIndex(cell, pointerHeaderIndex, sheet);
+                        String clarityIndex = getClarityIndex(cell, clarityHeaderRowIndex, sheet);
+                        String cutIndex = getCutIndex(cell, cutHeaderRowIndex, sheet);
+                        String florescenceIndex = getFlorescenceIndex(cell, florescenceHeaderIndex, sheet);
+                        String colorIndex = getColorIndex(cell, colorHeaderIndex, sheet);
+                        String cellColor = getCellColor(cell, sheet);
+                        String fontStyle = getFontStyle(cell, sheet);
+                        System.out.println("RowData: " + cell.getCellType() + " | RowNum: " + cell.getRow().getRowNum());
+                        Map<String, String> rowDict = new HashMap<>();
+                        rowDict.put("Sheet", sheet.getSheetName());
+                        rowDict.put("Pointer", pointerIndex);
+                        rowDict.put("Clarity", clarityIndex);
+                        rowDict.put("Cut", cutIndex);
+                        rowDict.put("Color", colorIndex);
+                        rowDict.put("Florescence", florescenceIndex);
+                        rowDict.put("Font", fontStyle);
+                        rowDict.put("Value", (cell.getCellType() == CellType.BLANK || cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.STRING) && cell.toString().isEmpty() ? "NONE" : cell.toString());
+                        rowDict.put("Value_Color", cellColor);
+                        rowDict.put("Date", String.valueOf(date));
+//                System.out.println(rowDict);
+                        sheetItems.add(rowDict);
+                    } catch (Exception e) {
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                break;
             }
         }
     }
@@ -641,7 +697,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-            sheets = sheets.subList(0, 1);
+//            sheets = sheets.subList(25, 30);
             parseDataForXlsx(sheets, table);
         } catch (Exception e) {
             e.printStackTrace();
