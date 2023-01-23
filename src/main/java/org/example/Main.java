@@ -26,7 +26,6 @@ public class Main {
     public static void main(String[] args) {
         String fileName = args[0];
         String extension = fileName.substring(fileName.lastIndexOf("_") + 1, fileName.lastIndexOf("."));
-//        System.out.println("Extension" + extension);
         String table = args[1];
         excelToCsvForXlsx(fileName, table, extension);
     }
@@ -209,10 +208,8 @@ public class Main {
                 } else {
                     fontStyle = "normal".toUpperCase();
                 }
-                // price value if cell is numeric or string
                 String price = cell.getCellType() == CellType.NUMERIC ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue();
-                // print row number
-//                System.out.println("row number: " + cell.getRowIndex());
+
                 Map<String, String> rowMap = new HashMap<>();
                 rowMap.put("rap_date", extension);
                 rowMap.put("Sheet", sheet.getSheetName());
@@ -252,16 +249,13 @@ public class Main {
                 map.put("rap_date", extension);
             }
             sheetItems.add(map);
-//            System.out.println(map);
         }
         System.out.println("SHT: "+ sheetItems);
     }
 
     private static String getPointerIndex(Cell cell, List<Integer> pointerHeaderIndex, Sheet sheet) {
         Row sheetPointerHeaderRow = sheet.getRow(pointerHeaderIndex.get(0));
-//        System.out.println("sheetPointerHeaderRow: " + pointerHeaderIndex.get(0));
         int cellColumnIndex = cell.getColumnIndex();
-//        System.out.println("Cell type" + sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType());
         if (sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
             while (sheetPointerHeaderRow.getCell(cellColumnIndex).getCellType() == CellType.BLANK) {
                 cellColumnIndex -= 1;
@@ -350,12 +344,10 @@ public class Main {
     private static String getCellColor(Cell cell, Sheet sheet) {
         CellStyle style = cell.getCellStyle();
         if (style.getFillBackgroundColorColor() != null) {
-            System.out.println("Row: " + cell.getRowIndex() + " : " + cell.getColumnIndex());
-            System.out.println("Color: " + XSSFColor.toXSSFColor(style.getFillForegroundColorColor()).getARGBHex());
             XSSFColor argbColor = XSSFColor.toXSSFColor(style.getFillForegroundColorColor());
             if (argbColor.getARGBHex().equals("FF000000")) {
                 return "black".toUpperCase();
-            } else if (argbColor.getARGBHex().equals("FF00B050")) {
+            } else if (argbColor.getARGBHex().equals("FF008000")) {
                 return "green".toUpperCase();
             } else if (argbColor.getARGBHex().equals("FFFF0000")) {
                 return "red".toUpperCase();
@@ -400,11 +392,6 @@ public class Main {
         florescenceHeader.add("Medium");
         florescenceHeader.add("Strong");
 
-
-
-//        String name = sheet.getSheetName().substring(sheet.getSheetName().lastIndexOf("0") - 1, sheet.getSheetName().length());
-//        System.out.println("name" + name);
-
         String value = null;
 
         for (int l = 0; l <= sheet.getLastRowNum(); l++) {
@@ -414,7 +401,6 @@ public class Main {
                 System.out.println("Row" + l);
                 for(int k = sheet.getRow(l).getFirstCellNum(); k < sheet.getRow(l).getLastCellNum(); k++) {
                     Cell cell = sheet.getRow(l).getCell(k);
-//                    System.out.println("cell type" + cell.toString());
                     try {
                         if(cell.getCellType() == CellType.NUMERIC) {
                             value = cell.toString();
@@ -438,7 +424,6 @@ public class Main {
                         continue;
                     }
                     pointerHeaderIndex.add(cell.getRow().getRowNum());
-                    System.out.println("pointer index" + pointerHeaderIndex);
                     pointerHeader = sheet.getRow(cell.getRow().getRowNum()).getCell(2).toString();
                 }
             } else {
@@ -475,7 +460,6 @@ public class Main {
                     if (cell.toString().equals("Color")) {
                         colorHeaderIndex.add(cell.getRow().getRowNum());
                         colorHeaderIndex.add(cell.getColumnIndex());
-                        System.out.println("color index" + colorHeaderIndex);
                     } else if (cell.toString().equals("Florescence")) {
                         florescenceHeaderIndex.add(cell.getRow().getRowNum());
                         florescenceHeaderIndex.add(cell.getColumnIndex());
@@ -519,16 +503,21 @@ public class Main {
             lists.add(strings);
         }
 
-//        System.out.println("Lists" + lists);
-
-        System.out.println("sheet name" + sheet.getSheetName());
-
-        for (int f = 0; f < lists.size(); f++) {
-            for (int i = colorHeaderIndex.get(0) + 1; i < pointerHeaderIndex.get(2); i++) {
-                label:
-                for (int k = 0; k < lists.get(f).size(); k++) {
-                    for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
-                        Cell cell = sheet.getRow(i).getCell(j);
+        for (int k = colorHeaderIndex.get(2) + 1; k < sheet.getLastRowNum(); k++) {
+            int row = sheet.getRow(k).getRowNum();
+            try {
+                if (sheet.getRow(k).getCell(1).getCellType() == CellType.BLANK) {
+                    row -= 1;
+                    break;
+                }
+            } catch (Exception e) {
+                break;
+            }
+            int i = k - ((colorHeaderIndex.get(2) + 1) - (colorHeaderIndex.get(0) + 1));
+            try {
+                for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
+                    Cell cell = sheet.getRow(i).getCell(j);
+                    try {
                         if (cell == null) {
                             continue;
                         }
@@ -547,41 +536,46 @@ public class Main {
                         String cellColor = getCellColor(cell, sheet);
                         String fontStyle = getFontStyle(cell, sheet);
 
-//                        System.out.println("pointer index" + pointerIndex);
+                        Cell cells = sheet.getRow(k).getCell(j);
+                        String cellColors = getCellColor(cells, sheet);
+                        String fontStyles = getFontStyle(cells, sheet);
 
                         Map<String, String> rowDict = new HashMap<>();
                         rowDict.put("rap_date", extension);
-                        if(sheet.getSheetName().matches(DECIMAL_TO_DECIMAL)) {
+                        if (sheet.getSheetName().matches(DECIMAL_TO_DECIMAL)) {
                             shapeName = "Round";
                             replaceName = pointerIndex.replace("To", "-").replaceAll("\\s", "");
                             rowDict.put("shape", shapeName);
                             rowDict.put("pointer", replaceName);
-                        } else if(sheet.getSheetName().matches(STRING_DASH_DECIMAL_DASH_DECIMAL)) {
+                        } else if (sheet.getSheetName().matches(STRING_DASH_DECIMAL_DASH_DECIMAL)) {
                             shapeName = sheet.getSheetName().substring(0, sheet.getSheetName().indexOf("-"));
-                        } else if(sheet.getSheetName().matches(DECIMAL_TO_DECIMAL_Das)) {
+                            rowDict.put("shape", shapeName);
+                            rowDict.put("pointer", pointerIndex);
+                        } else if (sheet.getSheetName().matches(DECIMAL_TO_DECIMAL_Das)) {
                             shapeName = "Round";
+                            rowDict.put("shape", shapeName);
+                            rowDict.put("pointer", pointerIndex);
                         }
                         rowDict.put("clarity", clarityIndex);
                         rowDict.put("cut", cutIndex);
                         rowDict.put("color", colorIndex);
                         rowDict.put("fls", florescenceIndex);
-//                        rowDict.put("st_price");
                         rowDict.put("st_back", cell.toString());
                         rowDict.put("cert_cost", value);
-//                        rowDict.put("font_price");
-//                        rowDict.put("font_color_price");
                         rowDict.put("font_back", fontStyle);
                         rowDict.put("font_color_back", cellColor);
-//                        System.out.println(rowDict);
+                        rowDict.put("st_price", cells.toString());
+                        rowDict.put("font_price", fontStyles);
+                        rowDict.put("font_color_price", cellColors);
                         sheetItems.add(rowDict);
-                        continue label;
+                    } catch (Exception e) {
+                        break;
                     }
                 }
-
+            } catch (Exception e) {
+                break;
             }
         }
-
-
     }
 
     private static void parseTableThree(List<String> header, String pointer, Sheet sheet, List<Map<String, String>> sheetItems, Date date, String extension) {
@@ -723,7 +717,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-            sheets = sheets.subList(0, 1);
+//            sheets = sheets.subList(2, 3);
             parseDataForXlsx(sheets, table, extension);
         } catch (Exception e) {
             e.printStackTrace();
