@@ -470,39 +470,6 @@ public class Main {
             }
         }
 
-        ArrayList<ArrayList<String>> lists = new ArrayList<>();
-
-        for (int i = colorHeaderIndex.get(2) + 1; i < sheet.getLastRowNum(); i++) {
-            int row = sheet.getRow(i).getRowNum();
-            try {
-                if (sheet.getRow(i).getCell(1).getCellType() == CellType.BLANK) {
-                    row -= 1;
-                    break;
-                }
-            } catch (Exception e) {
-                break;
-            }
-            ArrayList<String> strings = new ArrayList<>();
-
-            try {
-                for (int j = 2; j < sheet.getRow(i).getLastCellNum(); j++) {
-                    Cell cell = sheet.getRow(i).getCell(j);
-                    try {
-                        if (cell == null) {
-                            continue;
-                        }
-
-                        strings.add(cell.getCellType() == CellType.STRING && cell.toString().isEmpty() ? "" : cell.toString());
-                    } catch (Exception e) {
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                break;
-            }
-            lists.add(strings);
-        }
-
         for (int k = colorHeaderIndex.get(2) + 1; k < sheet.getLastRowNum(); k++) {
             int row = sheet.getRow(k).getRowNum();
             try {
