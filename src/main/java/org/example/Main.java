@@ -627,10 +627,10 @@ public class Main {
             }
         }
 
-        System.out.println("Color Index: " + colorHeaderIndex);
-        System.out.println("Pointer Index: " + pointerHeaderIndex);
-        System.out.println("Sheet Index: " + sheet.getLastRowNum());
-        System.out.println("sheet name " + sheet.getSheetName());
+//        System.out.println("Color Index: " + colorHeaderIndex);
+//        System.out.println("Pointer Index: " + pointerHeaderIndex);
+//        System.out.println("Sheet Index: " + sheet.getLastRowNum());
+//        System.out.println("sheet name " + sheet.getSheetName());
 
         for (int i = colorHeaderIndex.get(2) + 1; i < sheet.getLastRowNum(); i++) {
             int row = sheet.getRow(i).getRowNum();
