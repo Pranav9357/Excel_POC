@@ -523,17 +523,17 @@ public class Main {
                         rowDict.put("rap_date", extension);
                         if (sheet.getSheetName().matches(DECIMAL_TO_DECIMAL)) {
                             shapeName = "Round";
-                            replaceName = pointerIndex.replace("To", "-").replaceAll("\\s", "");
+                            replaceName = pointerIndex.replace("TO", "-").replace("To", "-").replace("(", "").replace(")", "").replaceAll("\\s", "");
                             rowDict.put("shape", shapeName);
                             rowDict.put("pointer", replaceName);
                         } else if (sheet.getSheetName().matches(STRING_DASH_DECIMAL_DASH_DECIMAL)) {
                             shapeName = sheet.getSheetName().substring(0, sheet.getSheetName().indexOf("-"));
                             rowDict.put("shape", shapeName);
-                            rowDict.put("pointer", pointerIndex);
+                            rowDict.put("pointer", pointerIndex.replace("To", "-").replace("To", "-").replace("(", "").replace(")", "").replaceAll("\\s", ""));
                         } else if (sheet.getSheetName().matches(DECIMAL_TO_DECIMAL_Das)) {
                             shapeName = "Round";
                             rowDict.put("shape", shapeName);
-                            rowDict.put("pointer", pointerIndex);
+                            rowDict.put("pointer", pointerIndex.replace("(", "").replace(")", "").replaceAll("\\s", ""));
                         }
                         rowDict.put("clarity", clarityIndex);
                         rowDict.put("cut", cutIndex);
