@@ -395,9 +395,21 @@ public class Main {
         String value = null;
 
         for (int l = 0; l <= sheet.getLastRowNum(); l++) {
-
-
-            if(sheet.getLastRowNum() == l) {
+//            System.out.println("l" + l);
+            int row = 0;
+            try {
+                if(sheet.getRow(l).getCell(1).toString() == null) {
+                    continue;
+                }
+//                System.out.println("cell value" + sheet.getRow(l).getCell(1).toString());
+                if(sheet.getRow(l).getCell(1).toString().equals("CERTIFICATE COST:-")) {
+                    row = sheet.getRow(l).getRowNum();
+                    System.out.println("row" + row);
+                }
+            } catch (Exception e) {
+                continue;
+            }
+            if(l == row) {
                 System.out.println("Row" + l);
                 for(int k = sheet.getRow(l).getFirstCellNum(); k < sheet.getRow(l).getLastCellNum(); k++) {
                     Cell cell = sheet.getRow(l).getCell(k);
@@ -684,7 +696,7 @@ public class Main {
             }
             System.out.println("Total number of sheets: " + sheets.size());
             // only keep 1 sheet for testing
-//            sheets = sheets.subList(2, 3);
+//            sheets = sheets.subList(5, 6);
             parseDataForXlsx(sheets, table, extension);
         } catch (Exception e) {
             e.printStackTrace();
